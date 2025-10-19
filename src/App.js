@@ -1185,7 +1185,7 @@ function App() {
                   </div>
 
                   {editingResource.chapters && editingResource.chapters.length > 0 ? (
-                    <div style={{ maxHeight: '300px', overflow: 'auto' }}>
+                    <div style={{ maxHeight: '500px', overflow: 'auto' }}>
                       {editingResource.chapters.map((chapter, index) => (
                         <div key={index} style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #ddd' }}>
                           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
@@ -3700,7 +3700,7 @@ function App() {
                   </div>
 
                   {editingResource.chapters && editingResource.chapters.length > 0 ? (
-                    <div style={{ maxHeight: '300px', overflow: 'auto' }}>
+                    <div style={{ maxHeight: '500px', overflow: 'auto' }}>
                       {editingResource.chapters.map((chapter, index) => (
                         <div key={index} style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #ddd' }}>
                           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>

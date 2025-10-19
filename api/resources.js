@@ -260,6 +260,9 @@ module.exports = async function handler(req, res) {
                 create: chapters.map(chapter => ({
                   title: chapter.title || '',
                   timestamp: chapter.timestamp || '',
+                  chapterType: chapter.chapterType || 'Guide',
+                  opposingDeckId: chapter.opposingDeckId ? parseInt(chapter.opposingDeckId) : null,
+                  // Keep backward compatibility with old opponentDeck field
                   opponentDeck: chapter.opponentDeck || ''
                 }))
               }
