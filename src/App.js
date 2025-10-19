@@ -695,6 +695,8 @@ function App() {
 
       const data = await response.json();
 
+      console.log('Bulk import response:', { status: response.status, data });
+
       if (response.ok) {
         setImportResults(data);
 
