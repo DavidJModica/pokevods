@@ -137,13 +137,17 @@ module.exports = async function handler(req, res) {
         const youtubeData = mockRes.data;
 
         // Skip videos from before format date (Sept 26, 2025)
-        if (youtubeData.publicationDate) {
-          const videoDate = new Date(youtubeData.publicationDate);
-          if (videoDate < MEGA_EVOLUTIONS_FORMAT_DATE) {
-            // Silently skip old videos - don't add to results
-            console.log(`⏭️  Skipping old video (${videoDate.toLocaleDateString()}): ${youtubeData.title}`);
-            continue;
-          }
+        // Also skip videos without a publication date to prevent old videos from slipping through
+        if (!youtubeData.publicationDate) {
+          console.log(`⏭️  Skipping video with no publication date: ${youtubeData.title}`);
+          continue;
+        }
+
+        const videoDate = new Date(youtubeData.publicationDate);
+        if (videoDate < MEGA_EVOLUTIONS_FORMAT_DATE) {
+          // Silently skip old videos - don't add to results
+          console.log(`⏭️  Skipping old video (${videoDate.toLocaleDateString()}): ${youtubeData.title}`);
+          continue;
         }
 
         // Auto-detect deck from video title if deckId not provided
