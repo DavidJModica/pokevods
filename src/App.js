@@ -555,15 +555,27 @@ function App() {
     if (!editingResource) return;
 
     try {
+      // Clean up chapters data before sending
+      const cleanedData = {
+        ...editingResource,
+        chapters: editingResource.chapters?.map(chapter => ({
+          timestamp: chapter.timestamp,
+          title: chapter.title,
+          chapterType: chapter.chapterType || 'Guide',
+          opposingDeckId: chapter.opposingDeckId || null
+        }))
+      };
+
       const response = await fetch('/api/resources', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(editingResource)
+        body: JSON.stringify(cleanedData)
       });
 
       if (response.ok) {
+        alert('Resource updated successfully!');
         setEditingResource(null);
         // Refresh the appropriate view
         if (selectedDeck) {
@@ -576,9 +588,13 @@ function App() {
             fetchPendingResources();
           }
         }
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to update resource: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error updating resource:', error);
+      alert(`Error updating resource: ${error.message}`);
     }
   };
 
@@ -747,7 +763,18 @@ function App() {
       // Use provided resourceData or editingResource
       const dataToSend = resourceData || editingResource;
 
-      console.log('Approving resource:', resourceId, dataToSend);
+      // Clean up chapters data - remove relation objects and keep only the fields we need
+      const cleanedData = {
+        ...dataToSend,
+        chapters: dataToSend.chapters?.map(chapter => ({
+          timestamp: chapter.timestamp,
+          title: chapter.title,
+          chapterType: chapter.chapterType || 'Guide',
+          opposingDeckId: chapter.opposingDeckId || null
+        }))
+      };
+
+      console.log('Approving resource:', resourceId, cleanedData);
 
       const response = await fetch('/api/resources', {
         method: 'PUT',
@@ -756,7 +783,7 @@ function App() {
         },
         body: JSON.stringify({
           id: resourceId,
-          ...dataToSend,
+          ...cleanedData,
           status: 'approved'
         })
       });
