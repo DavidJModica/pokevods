@@ -71,6 +71,7 @@ function App() {
   const [showEditChapterDeckDropdown, setShowEditChapterDeckDropdown] = useState(false);
   const [tierListResources, setTierListResources] = useState([]);
   const [tournamentResources, setTournamentResources] = useState([]);
+  const [paidGuides, setPaidGuides] = useState([]);
 
   // Resource filters for deck page
   const [resourceTypeFilters, setResourceTypeFilters] = useState({
@@ -98,6 +99,7 @@ function App() {
     fetchDecks();
     fetchTierListResources();
     fetchTournamentResources();
+    fetchPaidGuidesResources();
   }, []);
 
   // Close deck dropdown when clicking outside
@@ -159,6 +161,22 @@ function App() {
       setTournamentResources(sorted);
     } catch (error) {
       console.error('Error fetching tournament resources:', error);
+    }
+  };
+
+  const fetchPaidGuidesResources = async () => {
+    try {
+      const response = await fetch('/api/resources?accessType=Paid');
+      const data = await response.json();
+      // Sort by publication date, newest first
+      const sorted = data.sort((a, b) => {
+        const dateA = a.publicationDate ? new Date(a.publicationDate) : new Date(0);
+        const dateB = b.publicationDate ? new Date(b.publicationDate) : new Date(0);
+        return dateB - dateA;
+      });
+      setPaidGuides(sorted);
+    } catch (error) {
+      console.error('Error fetching paid guides:', error);
     }
   };
 

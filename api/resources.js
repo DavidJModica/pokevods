@@ -16,7 +16,7 @@ module.exports = async function handler(req, res) {
   try {
     switch (method) {
       case 'GET': {
-        const { deckId, id, status } = req.query;
+        const { deckId, id, status, type, accessType } = req.query;
 
         // Get single resource by ID
         if (id) {
@@ -89,6 +89,55 @@ module.exports = async function handler(req, res) {
             orderBy: { createdAt: 'desc' }
           });
           return res.status(200).json(pendingResources);
+        }
+
+        // Get resources by type or accessType (for homepage sections)
+        if (type || accessType) {
+          const whereClause = {
+            status: 'approved'
+          };
+
+          if (type) {
+            whereClause.type = type;
+          }
+
+          if (accessType) {
+            whereClause.accessType = accessType;
+          }
+
+          const filteredResources = await prisma.resource.findMany({
+            where: whereClause,
+            include: {
+              deck: {
+                select: {
+                  id: true,
+                  name: true,
+                  icons: true
+                }
+              },
+              authorProfile: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true
+                }
+              },
+              chapters: {
+                include: {
+                  opposingDeck: {
+                    select: {
+                      id: true,
+                      name: true,
+                      icons: true
+                    }
+                  }
+                },
+                orderBy: { timestamp: 'asc' }
+              }
+            },
+            orderBy: { publicationDate: 'desc' }
+          });
+          return res.status(200).json(filteredResources);
         }
 
         // Get all resources for a deck (only approved by default)
