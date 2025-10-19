@@ -64,11 +64,13 @@ function App() {
   const [selectedAuthor, setSelectedAuthor] = useState(null);
   const [currentView, setCurrentView] = useState('home'); // 'home', 'deck', 'admin', 'author'
   const [importResults, setImportResults] = useState(null);
-  const [adminTab, setAdminTab] = useState('bulkImport'); // 'bulkImport', 'reviewQueue', 'matchupQueue'
+  const [adminTab, setAdminTab] = useState('bulkImport'); // 'bulkImport', 'reviewQueue', 'matchupQueue', 'manageGuides'
   const [editingDeck, setEditingDeck] = useState(null);
   const [editingChapter, setEditingChapter] = useState(null);
   const [editChapterDeckSearch, setEditChapterDeckSearch] = useState('');
   const [showEditChapterDeckDropdown, setShowEditChapterDeckDropdown] = useState(false);
+  const [editingGuideDeck, setEditingGuideDeck] = useState({}); // { [guideId]: deckSearch }
+  const [showGuideDeckDropdown, setShowGuideDeckDropdown] = useState(null); // guideId of dropdown showing
   const [tierListResources, setTierListResources] = useState([]);
   const [tournamentResources, setTournamentResources] = useState([]);
   const [paidGuides, setPaidGuides] = useState([]);
@@ -2351,6 +2353,24 @@ function App() {
             >
               🎯 Matchup Queue {matchupResources.length > 0 && `(${matchupResources.length})`}
             </button>
+            <button
+              onClick={() => {
+                setAdminTab('manageGuides');
+                fetchPaidGuidesResources();
+              }}
+              style={{
+                padding: '1rem 2rem',
+                border: 'none',
+                background: adminTab === 'manageGuides' ? '#007bff' : 'transparent',
+                color: adminTab === 'manageGuides' ? 'white' : '#333',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                borderBottom: adminTab === 'manageGuides' ? '3px solid #007bff' : 'none',
+                marginBottom: '-2px'
+              }}
+            >
+              💎 Manage Guides {paidGuides.length > 0 && `(${paidGuides.length})`}
+            </button>
           </div>
 
           {/* Bulk Import Tab */}
@@ -2787,6 +2807,184 @@ function App() {
                         >
                           {isGameplayWithNoMatchups ? '➕ Add Matchup Chapters' : '✏️ Edit & Assign Matchups'}
                         </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {/* Manage Guides Tab */}
+          {adminTab === 'manageGuides' && (
+            <div>
+              <h2>Manage Premium Guides ({paidGuides.length})</h2>
+              <p style={{ color: '#666', marginBottom: '1.5rem' }}>
+                Manage all premium guides and assign them to decks. Guides with deck assignments will appear on the deck's page.
+              </p>
+
+              {paidGuides.length === 0 ? (
+                <p>No premium guides found.</p>
+              ) : (
+                paidGuides.map((guide) => {
+                  const currentDeck = decks.find(d => d.id === guide.deckId);
+                  const searchValue = editingGuideDeck[guide.id] || currentDeck?.name || '';
+                  const filteredDecks = decks.filter(deck =>
+                    deck.name.toLowerCase().includes(searchValue.toLowerCase())
+                  ).slice(0, 10);
+
+                  return (
+                    <div key={guide.id} style={{
+                      border: '1px solid #ddd',
+                      borderRadius: '8px',
+                      padding: '1.5rem',
+                      marginBottom: '1rem',
+                      backgroundColor: guide.deckId ? '#f0f8ff' : '#fff'
+                    }}>
+                      <div style={{ marginBottom: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <strong style={{ fontSize: '1.1rem' }}>{guide.title}</strong>
+                          <span style={{
+                            fontSize: '0.7rem',
+                            backgroundColor: '#1890ff',
+                            color: 'white',
+                            padding: '2px 6px',
+                            borderRadius: '3px'
+                          }}>PAID</span>
+                          {guide.deckId && (
+                            <span style={{
+                              fontSize: '0.7rem',
+                              backgroundColor: '#28a745',
+                              color: 'white',
+                              padding: '2px 6px',
+                              borderRadius: '3px'
+                            }}>ASSIGNED</span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '0.9rem', color: '#666' }}>
+                          {guide.platform} • {guide.authorProfile?.name || guide.author}
+                          {guide.publicationDate && ` • ${new Date(guide.publicationDate).toLocaleDateString()}`}
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: '#999', marginTop: '0.25rem' }}>
+                          <a href={guide.url} target="_blank" rel="noopener noreferrer">{guide.url}</a>
+                        </div>
+                      </div>
+
+                      <div style={{ position: 'relative' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                          Assign to Deck:
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Search for deck or leave empty for no assignment..."
+                          value={searchValue}
+                          onChange={(e) => {
+                            setEditingGuideDeck({ ...editingGuideDeck, [guide.id]: e.target.value });
+                            setShowGuideDeckDropdown(guide.id);
+                          }}
+                          onFocus={() => setShowGuideDeckDropdown(guide.id)}
+                          style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            fontSize: '1rem',
+                            borderRadius: '6px',
+                            border: '2px solid #ddd'
+                          }}
+                        />
+                        {showGuideDeckDropdown === guide.id && filteredDecks.length > 0 && (
+                          <div className="deck-search-dropdown" style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            right: 0,
+                            backgroundColor: 'white',
+                            border: '1px solid #ddd',
+                            borderRadius: '4px',
+                            maxHeight: '300px',
+                            overflowY: 'auto',
+                            zIndex: 1000,
+                            marginTop: '0.25rem'
+                          }}>
+                            {filteredDecks.map(deck => {
+                              const icons = deck.icons ? JSON.parse(deck.icons) : (deck.icon ? [deck.icon] : []);
+                              return (
+                                <div
+                                  key={deck.id}
+                                  className="deck-search-item"
+                                  style={{
+                                    padding: '0.75rem',
+                                    cursor: 'pointer',
+                                    borderBottom: '1px solid #eee'
+                                  }}
+                                  onClick={async () => {
+                                    try {
+                                      const response = await fetch('/api/resources', {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                          ...guide,
+                                          deckId: deck.id
+                                        })
+                                      });
+
+                                      if (response.ok) {
+                                        setEditingGuideDeck({ ...editingGuideDeck, [guide.id]: deck.name });
+                                        setShowGuideDeckDropdown(null);
+                                        fetchPaidGuidesResources(); // Refresh the list
+                                        alert(`Successfully assigned "${guide.title}" to ${deck.name}`);
+                                      }
+                                    } catch (error) {
+                                      console.error('Error assigning deck:', error);
+                                      alert('Failed to assign deck');
+                                    }
+                                  }}
+                                >
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    {icons.map((icon, i) => (
+                                      <img key={i} src={icon} alt="" style={{ width: '24px', height: '24px' }} />
+                                    ))}
+                                    <span>{deck.name}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {guide.deckId && (
+                          <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.9rem', color: '#666' }}>
+                              Currently assigned to: <strong>{currentDeck?.name}</strong>
+                            </span>
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}
+                              onClick={async () => {
+                                try {
+                                  const response = await fetch('/api/resources', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      ...guide,
+                                      deckId: null
+                                    })
+                                  });
+
+                                  if (response.ok) {
+                                    setEditingGuideDeck({ ...editingGuideDeck, [guide.id]: '' });
+                                    fetchPaidGuidesResources(); // Refresh the list
+                                    alert(`Removed deck assignment from "${guide.title}"`);
+                                  }
+                                } catch (error) {
+                                  console.error('Error removing deck:', error);
+                                  alert('Failed to remove deck assignment');
+                                }
+                              }}
+                            >
+                              Remove Assignment
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
