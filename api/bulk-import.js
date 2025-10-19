@@ -41,6 +41,14 @@ async function extractVideoUrlsFromSource(sourceUrl) {
 module.exports = async function handler(req, res) {
   const { method } = req;
 
+  // Handle CORS preflight
+  if (method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(200).end();
+  }
+
   if (method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).json({ error: `Method ${method} Not Allowed` });

@@ -20,6 +20,7 @@ model Deck {
   deckList    String?   // Actual decklist text
   icon        String?   // Path to deck icon image (deprecated - use icons)
   icons       String?   // JSON array of icon paths
+  hidden      Boolean   @default(false) // Hide deck from main view
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
