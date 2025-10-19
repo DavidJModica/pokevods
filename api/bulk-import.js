@@ -136,15 +136,12 @@ module.exports = async function handler(req, res) {
 
         const youtubeData = mockRes.data;
 
-        // Check if video is from before format date
+        // Skip videos from before format date (Sept 26, 2025)
         if (youtubeData.publicationDate) {
           const videoDate = new Date(youtubeData.publicationDate);
           if (videoDate < MEGA_EVOLUTIONS_FORMAT_DATE) {
-            results.push({
-              url,
-              success: false,
-              error: `Video is from before the Mega Evolutions format (Sept 26, 2025). Publication date: ${videoDate.toLocaleDateString()}`
-            });
+            // Silently skip old videos - don't add to results
+            console.log(`⏭️  Skipping old video (${videoDate.toLocaleDateString()}): ${youtubeData.title}`);
             continue;
           }
         }
