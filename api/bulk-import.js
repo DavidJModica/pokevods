@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const fetch = require('node-fetch');
+const youtubeHandler = require('./youtube');
 
 // Format date for Mega Evolutions format (Sept 26, 2025)
 const MEGA_EVOLUTIONS_FORMAT_DATE = new Date('2025-09-26');
@@ -116,18 +117,24 @@ module.exports = async function handler(req, res) {
           continue;
         }
 
-        // Fetch YouTube metadata
-        // Use relative URL to work in both local and production environments
-        const apiBaseUrl = process.env.VERCEL_URL
-          ? `https://${process.env.VERCEL_URL}`
-          : 'http://localhost:3002';
-        const youtubeResponse = await fetch(`${apiBaseUrl}/api/youtube?url=${encodeURIComponent(url)}`);
+        // Fetch YouTube metadata by calling the handler directly
+        // This avoids HTTP calls between serverless functions on Vercel
+        const mockRes = {
+          statusCode: 200,
+          headers: {},
+          setHeader: function(key, value) { this.headers[key] = value; },
+          status: function(code) { this.statusCode = code; return this; },
+          json: function(data) { this.data = data; return this; },
+          end: function() { return this; }
+        };
 
-        if (!youtubeResponse.ok) {
-          throw new Error(`YouTube API returned ${youtubeResponse.status}: ${await youtubeResponse.text()}`);
+        await youtubeHandler({ method: 'GET', query: { url } }, mockRes);
+
+        if (mockRes.statusCode !== 200 || !mockRes.data) {
+          throw new Error(`YouTube API returned ${mockRes.statusCode}: ${JSON.stringify(mockRes.data || {})}`);
         }
 
-        const youtubeData = await youtubeResponse.json();
+        const youtubeData = mockRes.data;
 
         // Check if video is from before format date
         if (youtubeData.publicationDate) {
