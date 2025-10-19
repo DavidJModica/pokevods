@@ -69,6 +69,8 @@ function App() {
   const [editingChapter, setEditingChapter] = useState(null);
   const [editChapterDeckSearch, setEditChapterDeckSearch] = useState('');
   const [showEditChapterDeckDropdown, setShowEditChapterDeckDropdown] = useState(false);
+  const [tierListResources, setTierListResources] = useState([]);
+  const [tournamentResources, setTournamentResources] = useState([]);
 
   // Resource filters for deck page
   const [resourceTypeFilters, setResourceTypeFilters] = useState({
@@ -91,9 +93,11 @@ function App() {
   });
   const [showOutOfDate, setShowOutOfDate] = useState(false);
 
-  // Fetch all decks on load
+  // Fetch all decks and special resources on load
   useEffect(() => {
     fetchDecks();
+    fetchTierListResources();
+    fetchTournamentResources();
   }, []);
 
   // Close deck dropdown when clicking outside
@@ -123,6 +127,38 @@ function App() {
       console.error('Error fetching decks:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTierListResources = async () => {
+    try {
+      const response = await fetch('/api/resources?type=Tierlist');
+      const data = await response.json();
+      // Sort by publication date, newest first
+      const sorted = data.sort((a, b) => {
+        const dateA = a.publicationDate ? new Date(a.publicationDate) : new Date(0);
+        const dateB = b.publicationDate ? new Date(b.publicationDate) : new Date(0);
+        return dateB - dateA;
+      });
+      setTierListResources(sorted);
+    } catch (error) {
+      console.error('Error fetching tier list resources:', error);
+    }
+  };
+
+  const fetchTournamentResources = async () => {
+    try {
+      const response = await fetch('/api/resources?type=Tournament%20Report');
+      const data = await response.json();
+      // Sort by publication date, newest first
+      const sorted = data.sort((a, b) => {
+        const dateA = a.publicationDate ? new Date(a.publicationDate) : new Date(0);
+        const dateB = b.publicationDate ? new Date(b.publicationDate) : new Date(0);
+        return dateB - dateA;
+      });
+      setTournamentResources(sorted);
+    } catch (error) {
+      console.error('Error fetching tournament resources:', error);
     }
   };
 
@@ -3098,7 +3134,93 @@ function App() {
         </div>
       )}
 
+      {/* Tier Lists Section */}
+      {tierListResources.length > 0 && (
+        <div style={{ marginBottom: '2rem', padding: '1.5rem', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+          <h2 style={{ marginTop: 0, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            📊 Tier Lists
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+            {tierListResources.slice(0, 6).map(resource => (
+              <a
+                key={resource.id}
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  border: '1px solid #ddd',
+                  borderRadius: '6px',
+                  padding: '1rem',
+                  backgroundColor: 'white',
+                  transition: 'transform 0.2s, box-shadow 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>{resource.title}</div>
+                <div style={{ fontSize: '0.9rem', color: '#666' }}>
+                  {resource.authorProfile?.name || resource.author}
+                  {resource.publicationDate && ` • ${new Date(resource.publicationDate).toLocaleDateString()}`}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tournament VODs Section */}
+      {tournamentResources.length > 0 && (
+        <div style={{ marginBottom: '2rem', padding: '1.5rem', backgroundColor: '#fff3cd', borderRadius: '8px' }}>
+          <h2 style={{ marginTop: 0, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            🏆 Tournament VODs
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+            {tournamentResources.slice(0, 6).map(resource => (
+              <a
+                key={resource.id}
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  border: '1px solid #ddd',
+                  borderRadius: '6px',
+                  padding: '1rem',
+                  backgroundColor: 'white',
+                  transition: 'transform 0.2s, box-shadow 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>{resource.title}</div>
+                <div style={{ fontSize: '0.9rem', color: '#666' }}>
+                  {resource.deck?.name && <span style={{ color: '#28a745', fontWeight: 'bold' }}>{resource.deck.name} • </span>}
+                  {resource.authorProfile?.name || resource.author}
+                  {resource.publicationDate && ` • ${new Date(resource.publicationDate).toLocaleDateString()}`}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="decks-container">
+        <h2 style={{ marginBottom: '1rem' }}>Deck Guides</h2>
         {loading ? (
           <div className="loading">Loading decks...</div>
         ) : decks.length === 0 ? (
