@@ -2606,7 +2606,9 @@ function App() {
             <div>
               <h2>Matchup Queue ({matchupResources.length})</h2>
               <p style={{ color: '#666', marginBottom: '1.5rem' }}>
-                These approved resources have matchup chapters that are missing opponent deck information. Edit them to assign the correct opposing decks.
+                Resources that need matchup information. This includes:
+                <br />• Videos with matchup chapters missing opponent deck assignments
+                <br />• Gameplay videos with no matchup chapters at all
               </p>
 
               {matchupResources.length === 0 ? (
@@ -2614,25 +2616,38 @@ function App() {
               ) : (
                 matchupResources.map(resource => {
                   const missingMatchups = resource.chapters?.filter(ch => ch.chapterType === 'Matchup' && !ch.opposingDeckId) || [];
+                  const hasMatchupChapters = resource.chapters?.some(ch => ch.chapterType === 'Matchup') || false;
+                  const isGameplayWithNoMatchups = resource.type.includes('Gameplay') && !hasMatchupChapters;
+
                   return (
-                    <div key={resource.id} style={{ border: '1px solid #ddd', padding: '1.5rem', marginBottom: '1rem', borderRadius: '8px', backgroundColor: '#fff3cd' }}>
+                    <div key={resource.id} style={{ border: '1px solid #ddd', padding: '1.5rem', marginBottom: '1rem', borderRadius: '8px', backgroundColor: isGameplayWithNoMatchups ? '#fff8dc' : '#fff3cd' }}>
                       <div style={{ marginBottom: '1rem' }}>
                         <div style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
                           {resource.deck?.name && <span style={{ color: '#28a745' }}>{resource.deck.name}</span>}
                           {' '}- {resource.title}
                         </div>
                         <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
-                          <strong>URL:</strong> <a href={resource.url} target="_blank" rel="noopener noreferrer">{resource.url}</a>
+                          <strong>Type:</strong> {resource.type} | <strong>URL:</strong> <a href={resource.url} target="_blank" rel="noopener noreferrer">{resource.url}</a>
                         </div>
-                        <div style={{ fontSize: '0.9rem', color: '#856404', marginBottom: '0.5rem' }}>
-                          <strong>⚠ {missingMatchups.length} Matchup(s) Missing Opponent Deck:</strong>
-                          {missingMatchups.map((ch, idx) => (
-                            <span key={ch.id}>
-                              {idx > 0 && ', '}
-                              {ch.timestamp} - {ch.title || 'Untitled'}
+                        {isGameplayWithNoMatchups ? (
+                          <div style={{ fontSize: '0.9rem', color: '#cc7a00', marginBottom: '0.5rem' }}>
+                            <strong>⚠ Gameplay video with no matchup chapters</strong>
+                            <br />
+                            <span style={{ fontSize: '0.85rem', color: '#666' }}>
+                              This video is marked as "Gameplay" but has no matchup chapters. Add matchup chapters to organize the gameplay by opponent deck.
                             </span>
-                          ))}
-                        </div>
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: '0.9rem', color: '#856404', marginBottom: '0.5rem' }}>
+                            <strong>⚠ {missingMatchups.length} Matchup(s) Missing Opponent Deck:</strong>
+                            {missingMatchups.map((ch, idx) => (
+                              <span key={ch.id}>
+                                {idx > 0 && ', '}
+                                {ch.timestamp} - {ch.title || 'Untitled'}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button
@@ -2643,7 +2658,7 @@ function App() {
                             setShowEditDeckDropdown(false);
                           }}
                         >
-                          ✏️ Edit & Assign Matchups
+                          {isGameplayWithNoMatchups ? '➕ Add Matchup Chapters' : '✏️ Edit & Assign Matchups'}
                         </button>
                       </div>
                     </div>

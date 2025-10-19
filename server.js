@@ -31,16 +31,34 @@ app.all('/api/decks', async (req, res) => {
 app.get('/api/resources/matchup-queue', async (req, res) => {
   try {
     const prisma = require('./lib/prisma');
-    // Find approved resources where at least one chapter has chapterType='Matchup' but opposingDeckId is null
+    // Find approved resources where:
+    // 1. At least one chapter has chapterType='Matchup' but opposingDeckId is null, OR
+    // 2. Type contains "Gameplay" but has no matchup chapters at all
     const resources = await prisma.resource.findMany({
       where: {
         status: 'approved',
-        chapters: {
-          some: {
-            chapterType: 'Matchup',
-            opposingDeckId: null
+        OR: [
+          {
+            // Has matchup chapters missing opponent deck
+            chapters: {
+              some: {
+                chapterType: 'Matchup',
+                opposingDeckId: null
+              }
+            }
+          },
+          {
+            // Is Gameplay type but has no matchup chapters
+            type: {
+              contains: 'Gameplay'
+            },
+            chapters: {
+              none: {
+                chapterType: 'Matchup'
+              }
+            }
           }
-        }
+        ]
       },
       include: {
         deck: {
