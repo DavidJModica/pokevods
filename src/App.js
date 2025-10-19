@@ -2155,19 +2155,92 @@ function App() {
                     required
                   />
                 </div>
+                <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
+                  You can either paste an image URL or upload an image file from your computer.
+                </div>
                 <div className="form-row">
-                  <input
-                    type="url"
-                    placeholder="Icon 1 URL (optional)"
-                    value={editingDeck.icon1}
-                    onChange={(e) => setEditingDeck({ ...editingDeck, icon1: e.target.value })}
-                  />
-                  <input
-                    type="url"
-                    placeholder="Icon 2 URL (optional)"
-                    value={editingDeck.icon2}
-                    onChange={(e) => setEditingDeck({ ...editingDeck, icon2: e.target.value })}
-                  />
+                  <div style={{ flex: 1 }}>
+                    <input
+                      type="url"
+                      placeholder="Icon 1 URL (optional)"
+                      value={editingDeck.icon1}
+                      onChange={(e) => setEditingDeck({ ...editingDeck, icon1: e.target.value })}
+                      style={{ marginBottom: '0.5rem' }}
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <label
+                        htmlFor="icon1-upload"
+                        style={{
+                          padding: '0.5rem 1rem',
+                          backgroundColor: '#28a745',
+                          color: 'white',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '0.9rem',
+                          display: 'inline-block'
+                        }}
+                      >
+                        📁 Upload Icon 1
+                      </label>
+                      <input
+                        id="icon1-upload"
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setEditingDeck({ ...editingDeck, icon1: reader.result });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <input
+                      type="url"
+                      placeholder="Icon 2 URL (optional)"
+                      value={editingDeck.icon2}
+                      onChange={(e) => setEditingDeck({ ...editingDeck, icon2: e.target.value })}
+                      style={{ marginBottom: '0.5rem' }}
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <label
+                        htmlFor="icon2-upload"
+                        style={{
+                          padding: '0.5rem 1rem',
+                          backgroundColor: '#28a745',
+                          color: 'white',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '0.9rem',
+                          display: 'inline-block'
+                        }}
+                      >
+                        📁 Upload Icon 2
+                      </label>
+                      <input
+                        id="icon2-upload"
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setEditingDeck({ ...editingDeck, icon2: reader.result });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
                 {(editingDeck.icon1 || editingDeck.icon2) && (
                   <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', padding: '0.5rem', backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
