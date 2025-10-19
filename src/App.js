@@ -3225,44 +3225,6 @@ function App() {
         </div>
       )}
 
-      {/* Premium Guides Section */}
-      {paidGuides.length > 0 && (
-        <div className="decks-container" style={{ marginBottom: '2rem' }}>
-          <h2 style={{ marginBottom: '1rem' }}>💎 Premium Guides</h2>
-          <div className="decks-list">
-            {paidGuides.map(resource => (
-              <a
-                key={resource.id}
-                href={resource.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="deck-list-item"
-                style={{ textDecoration: 'none', color: 'inherit' }}
-              >
-                <div className="deck-list-info">
-                  <span className="deck-list-name">
-                    {resource.title}
-                    <span style={{
-                      marginLeft: '0.5rem',
-                      fontSize: '0.7rem',
-                      backgroundColor: '#1890ff',
-                      color: 'white',
-                      padding: '2px 6px',
-                      borderRadius: '3px',
-                      fontWeight: 'normal'
-                    }}>PAID</span>
-                  </span>
-                  <span className="deck-list-meta">
-                    {resource.platform} • {resource.authorProfile?.name || resource.author}
-                    {resource.publicationDate && ` • ${new Date(resource.publicationDate).toLocaleDateString()}`}
-                  </span>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Tier Lists Section */}
       {tierListResources.length > 0 && (
         <div className="decks-container" style={{ marginBottom: '2rem' }}>
@@ -3362,6 +3324,44 @@ function App() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Premium Guides Section (only guides without deck assignment) */}
+        {paidGuides.filter(guide => !guide.deckId).length > 0 && (
+          <div style={{ marginTop: '2rem' }}>
+            <h2 style={{ marginBottom: '1rem' }}>💎 Premium Guides</h2>
+            <div className="decks-list">
+              {paidGuides.filter(guide => !guide.deckId).map(resource => (
+                <a
+                  key={resource.id}
+                  href={resource.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="deck-list-item"
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <div className="deck-list-info">
+                    <span className="deck-list-name">
+                      {resource.title}
+                      <span style={{
+                        marginLeft: '0.5rem',
+                        fontSize: '0.7rem',
+                        backgroundColor: '#1890ff',
+                        color: 'white',
+                        padding: '2px 6px',
+                        borderRadius: '3px',
+                        fontWeight: 'normal'
+                      }}>PAID</span>
+                    </span>
+                    <span className="deck-list-meta">
+                      {resource.platform} • {resource.authorProfile?.name || resource.author}
+                      {resource.publicationDate && ` • ${new Date(resource.publicationDate).toLocaleDateString()}`}
+                    </span>
+                  </div>
+                </a>
+              ))}
+            </div>
           </div>
         )}
 
