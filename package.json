@@ -3,16 +3,31 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@prisma/client": "^6.17.1",
+    "axios": "^1.12.2",
+    "cheerio": "^1.1.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "node-fetch": "^2.7.0",
+    "prisma": "^6.17.1",
+    "puppeteer": "^24.25.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-scripts": "5.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "node server.js",
+    "client": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "scrape": "node scripts/scrape-with-icons.js",
+    "scrape:clear": "node scripts/scrape-with-icons.js --clear",
+    "scrape:dry": "node scripts/scrape-with-icons.js --dry-run",
+    "scrape:no-icons": "node scripts/scrape-with-icons.js --no-icons"
   },
+  "proxy": "http://localhost:3002",
   "eslintConfig": {
     "extends": "react-app"
   },
@@ -27,5 +42,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }

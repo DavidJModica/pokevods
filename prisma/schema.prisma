@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Deck {
+  id          Int       @id @default(autoincrement())
+  name        String
+  archetype   String    // e.g., "Charizard ex", "Gardevoir ex", "Lost Zone"
+  format      String    // e.g., "Standard", "Expanded", "Unlimited"
+  description String?
+  deckList    String?   // Actual decklist text
+  icon        String?   // Path to deck icon image (deprecated - use icons)
+  icons       String?   // JSON array of icon paths
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  resources   Resource[]
+  matchupChapters Chapter[] @relation("OpposingDeck")
+}
+
+model Author {
+  id             Int       @id @default(autoincrement())
+  name           String    @unique
+  slug           String    @unique // URL-friendly version of name
+  bio            String?
+  profilePicture String?   // URL to profile picture
+  youtube        String?
+  twitter        String?
+  twitch         String?
+  discord        String?
+  website        String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  resources      Resource[]
+}
+
+model Resource {
+  id              Int      @id @default(autoincrement())
+  deckId          Int?
+  deck            Deck?    @relation(fields: [deckId], references: [id], onDelete: Cascade)
+
+  type            String   // "Guide", "Gameplay", or "Guide and Gameplay"
+  title           String
+  url             String
+  author          String?  // Legacy text field
+  authorId        Int?
+  authorProfile   Author?  @relation(fields: [authorId], references: [id])
+  platform        String?  // "YouTube", "Metafy", "Reddit", "Other"
+  accessType      String   @default("Free") // "Free" or "Paid"
+  publicationDate DateTime?
+  thumbnail       String?  // YouTube thumbnail URL
+  decklist        String?  // Optional decklist text
+  status          String   @default("approved") // "pending" or "approved"
+
+  chapters        Chapter[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Chapter {
+  id              Int      @id @default(autoincrement())
+  resourceId      Int
+  resource        Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  timestamp       String   // e.g., "12:34" or "1:23:45"
+  title           String?
+  chapterType     String   // "Guide" or "Matchup"
+
+  // Only for Matchup type chapters
+  opposingDeckId  Int?
+  opposingDeck    Deck?    @relation("OpposingDeck", fields: [opposingDeckId], references: [id])
+
+  createdAt       DateTime @default(now())
+}
