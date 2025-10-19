@@ -67,7 +67,7 @@ module.exports = async function handler(req, res) {
       }
 
       case 'POST': {
-        const { name, bio, youtube, twitter, twitch, discord, website } = req.body;
+        const { name, bio, youtube, twitter, twitch, discord, website, metafy } = req.body;
 
         if (!name) {
           return res.status(400).json({ error: 'Name is required' });
@@ -85,7 +85,8 @@ module.exports = async function handler(req, res) {
             twitter,
             twitch,
             discord,
-            website
+            website,
+            metafy
           }
         });
 
@@ -93,7 +94,7 @@ module.exports = async function handler(req, res) {
       }
 
       case 'PUT': {
-        const { id, name, bio, youtube, twitter, twitch, discord, website } = req.body;
+        const { id, name, bio, youtube, twitter, twitch, discord, website, metafy } = req.body;
 
         if (!id) {
           return res.status(400).json({ error: 'ID is required' });
@@ -114,7 +115,8 @@ module.exports = async function handler(req, res) {
             ...(twitter !== undefined && { twitter }),
             ...(twitch !== undefined && { twitch }),
             ...(discord !== undefined && { discord }),
-            ...(website !== undefined && { website })
+            ...(website !== undefined && { website }),
+            ...(metafy !== undefined && { metafy })
           }
         });
 

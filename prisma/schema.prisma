@@ -39,6 +39,7 @@ model Author {
   twitch         String?
   discord        String?
   website        String?
+  metafy         String?   // Metafy profile URL
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

@@ -64,7 +64,7 @@ function App() {
   const [selectedAuthor, setSelectedAuthor] = useState(null);
   const [currentView, setCurrentView] = useState('home'); // 'home', 'deck', 'admin', 'author'
   const [importResults, setImportResults] = useState(null);
-  const [adminTab, setAdminTab] = useState('bulkImport'); // 'bulkImport', 'reviewQueue', 'matchupQueue', 'manageGuides'
+  const [adminTab, setAdminTab] = useState('bulkImport'); // 'bulkImport', 'reviewQueue', 'matchupQueue', 'manageGuides', 'manageAuthors'
   const [editingDeck, setEditingDeck] = useState(null);
   const [editingChapter, setEditingChapter] = useState(null);
   const [editChapterDeckSearch, setEditChapterDeckSearch] = useState('');
@@ -74,6 +74,9 @@ function App() {
   const [tierListResources, setTierListResources] = useState([]);
   const [tournamentResources, setTournamentResources] = useState([]);
   const [paidGuides, setPaidGuides] = useState([]);
+  const [authors, setAuthors] = useState([]);
+  const [editingAuthor, setEditingAuthor] = useState({}); // { [authorId]: { name, youtube, metafy } }
+
 
   // Resource filters for deck page
   const [resourceTypeFilters, setResourceTypeFilters] = useState({
@@ -181,6 +184,16 @@ function App() {
       console.error('Error fetching paid guides:', error);
     }
   };
+  const fetchAuthors = async () => {
+    try {
+      const response = await fetch('/api/authors');
+      const data = await response.json();
+      setAuthors(data);
+    } catch (error) {
+      console.error('Error fetching authors:', error);
+    }
+  };
+
 
   const fetchDeckById = async (id) => {
     try {
@@ -2371,6 +2384,25 @@ function App() {
             >
               💎 Manage Guides {paidGuides.length > 0 && `(${paidGuides.length})`}
             </button>
+            <button
+              onClick={() => {
+                setAdminTab('manageAuthors');
+                fetchAuthors();
+              }}
+              style={{
+                padding: '1rem 2rem',
+                border: 'none',
+                background: adminTab === 'manageAuthors' ? '#007bff' : 'transparent',
+                color: adminTab === 'manageAuthors' ? 'white' : '#333',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                borderBottom: adminTab === 'manageAuthors' ? '3px solid #007bff' : 'none',
+                marginBottom: '-2px'
+              }}
+            >
+              👤 Manage Authors {authors.length > 0 && `(${authors.length})`}
+            </button>
+
           </div>
 
           {/* Bulk Import Tab */}
