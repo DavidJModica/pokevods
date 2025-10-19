@@ -731,7 +731,7 @@ function App() {
 
   const fetchMatchupResources = async () => {
     try {
-      const response = await fetch('/api/resources/matchup-queue');
+      const response = await fetch('/api/matchup-queue');
       const data = await response.json();
       setMatchupResources(data);
     } catch (error) {
