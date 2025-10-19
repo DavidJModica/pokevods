@@ -30,7 +30,9 @@ app.all('/api/decks', async (req, res) => {
 
 app.get('/api/resources/matchup-queue', async (req, res) => {
   try {
+    console.log('🔍 Matchup queue endpoint called');
     const prisma = require('./lib/prisma');
+    console.log('📦 Prisma client loaded');
     // Find approved resources where:
     // 1. At least one chapter has chapterType='Matchup' but opposingDeckId is null, OR
     // 2. Type contains "Gameplay" but has no matchup chapters at all
@@ -83,9 +85,10 @@ app.get('/api/resources/matchup-queue', async (req, res) => {
       },
       orderBy: { createdAt: 'desc' }
     });
+    console.log(`✅ Matchup queue query returned ${resources.length} resources`);
     res.status(200).json(resources);
   } catch (error) {
-    console.error('Matchup queue API error:', error);
+    console.error('❌ Matchup queue API error:', error);
     if (!res.headersSent) {
       res.status(500).json({ error: 'Internal server error', details: error.message });
     }
