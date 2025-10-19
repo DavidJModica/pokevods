@@ -3080,6 +3080,18 @@ function App() {
                         >
                           {isGameplayWithNoMatchups ? '➕ Add Matchup Chapters' : '✏️ Edit & Assign Matchups'}
                         </button>
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => {
+                            setEditingResource(resource);
+                            setEditDeckSearch(resource.deck?.name || '');
+                            setShowEditDeckDropdown(false);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          style={{ backgroundColor: '#6c757d', color: 'white' }}
+                        >
+                          📝 Edit Resource
+                        </button>
                       </div>
                     </div>
                   );
