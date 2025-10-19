@@ -747,6 +747,8 @@ function App() {
       // Use provided resourceData or editingResource
       const dataToSend = resourceData || editingResource;
 
+      console.log('Approving resource:', resourceId, dataToSend);
+
       const response = await fetch('/api/resources', {
         method: 'PUT',
         headers: {
@@ -760,14 +762,20 @@ function App() {
       });
 
       if (response.ok) {
+        alert('Resource approved successfully!');
         setEditingResource(null);
         await fetchPendingResources();
         if (selectedDeck) {
           fetchDeckById(selectedDeck.id);
         }
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to approve resource:', errorData);
+        alert(`Failed to approve resource: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error approving resource:', error);
+      alert(`Error approving resource: ${error.message}`);
     }
   };
 
