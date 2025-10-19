@@ -3225,41 +3225,64 @@ function App() {
         </div>
       )}
 
-      {/* Tier Lists Section */}
-      {tierListResources.length > 0 && (
-        <div style={{ marginBottom: '2rem', padding: '1.5rem', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-          <h2 style={{ marginTop: 0, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            📊 Tier Lists
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-            {tierListResources.slice(0, 6).map(resource => (
+      {/* Premium Guides Section */}
+      {paidGuides.length > 0 && (
+        <div className="decks-container" style={{ marginBottom: '2rem' }}>
+          <h2 style={{ marginBottom: '1rem' }}>💎 Premium Guides</h2>
+          <div className="decks-list">
+            {paidGuides.map(resource => (
               <a
                 key={resource.id}
                 href={resource.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  textDecoration: 'none',
-                  color: 'inherit',
-                  border: '1px solid #ddd',
-                  borderRadius: '6px',
-                  padding: '1rem',
-                  backgroundColor: 'white',
-                  transition: 'transform 0.2s, box-shadow 0.2s'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
+                className="deck-list-item"
+                style={{ textDecoration: 'none', color: 'inherit' }}
               >
-                <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>{resource.title}</div>
-                <div style={{ fontSize: '0.9rem', color: '#666' }}>
-                  {resource.authorProfile?.name || resource.author}
-                  {resource.publicationDate && ` • ${new Date(resource.publicationDate).toLocaleDateString()}`}
+                <div className="deck-list-info">
+                  <span className="deck-list-name">
+                    {resource.title}
+                    <span style={{
+                      marginLeft: '0.5rem',
+                      fontSize: '0.7rem',
+                      backgroundColor: '#1890ff',
+                      color: 'white',
+                      padding: '2px 6px',
+                      borderRadius: '3px',
+                      fontWeight: 'normal'
+                    }}>PAID</span>
+                  </span>
+                  <span className="deck-list-meta">
+                    {resource.platform} • {resource.authorProfile?.name || resource.author}
+                    {resource.publicationDate && ` • ${new Date(resource.publicationDate).toLocaleDateString()}`}
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tier Lists Section */}
+      {tierListResources.length > 0 && (
+        <div className="decks-container" style={{ marginBottom: '2rem' }}>
+          <h2 style={{ marginBottom: '1rem' }}>📊 Tier Lists</h2>
+          <div className="decks-list">
+            {tierListResources.map(resource => (
+              <a
+                key={resource.id}
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="deck-list-item"
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
+                <div className="deck-list-info">
+                  <span className="deck-list-name">{resource.title}</span>
+                  <span className="deck-list-meta">
+                    {resource.authorProfile?.name || resource.author}
+                    {resource.publicationDate && ` • ${new Date(resource.publicationDate).toLocaleDateString()}`}
+                  </span>
                 </div>
               </a>
             ))}
@@ -3269,40 +3292,31 @@ function App() {
 
       {/* Tournament VODs Section */}
       {tournamentResources.length > 0 && (
-        <div style={{ marginBottom: '2rem', padding: '1.5rem', backgroundColor: '#fff3cd', borderRadius: '8px' }}>
-          <h2 style={{ marginTop: 0, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            🏆 Tournament VODs
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-            {tournamentResources.slice(0, 6).map(resource => (
+        <div className="decks-container" style={{ marginBottom: '2rem' }}>
+          <h2 style={{ marginBottom: '1rem' }}>🏆 Tournament VODs</h2>
+          <div className="decks-list">
+            {tournamentResources.map(resource => (
               <a
                 key={resource.id}
                 href={resource.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  textDecoration: 'none',
-                  color: 'inherit',
-                  border: '1px solid #ddd',
-                  borderRadius: '6px',
-                  padding: '1rem',
-                  backgroundColor: 'white',
-                  transition: 'transform 0.2s, box-shadow 0.2s'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
+                className="deck-list-item"
+                style={{ textDecoration: 'none', color: 'inherit' }}
               >
-                <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>{resource.title}</div>
-                <div style={{ fontSize: '0.9rem', color: '#666' }}>
-                  {resource.deck?.name && <span style={{ color: '#28a745', fontWeight: 'bold' }}>{resource.deck.name} • </span>}
-                  {resource.authorProfile?.name || resource.author}
-                  {resource.publicationDate && ` • ${new Date(resource.publicationDate).toLocaleDateString()}`}
+                <div className="deck-list-info">
+                  <span className="deck-list-name">
+                    {resource.deck?.name && (
+                      <span style={{ color: '#28a745', fontWeight: 'bold', marginRight: '0.5rem' }}>
+                        {resource.deck.name}
+                      </span>
+                    )}
+                    {resource.title}
+                  </span>
+                  <span className="deck-list-meta">
+                    {resource.authorProfile?.name || resource.author}
+                    {resource.publicationDate && ` • ${new Date(resource.publicationDate).toLocaleDateString()}`}
+                  </span>
                 </div>
               </a>
             ))}
