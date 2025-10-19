@@ -16,11 +16,11 @@ function extractYouTubeId(url) {
 }
 
 module.exports = async function handler(req, res) {
-  const { method, query } = req;
+  const { method, query, body } = req;
 
   // Set CORS headers for all requests
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   // Handle CORS preflight
@@ -28,12 +28,13 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  if (method !== 'GET') {
-    res.setHeader('Allow', ['GET']);
+  if (method !== 'GET' && method !== 'POST') {
+    res.setHeader('Allow', ['GET', 'POST']);
     return res.status(405).json({ error: `Method ${method} not allowed` });
   }
 
-  const { url } = query;
+  // Get URL from query string (GET) or body (POST)
+  const url = method === 'GET' ? query.url : body?.url;
 
   if (!url) {
     return res.status(400).json({ error: 'URL parameter is required' });
