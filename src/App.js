@@ -88,7 +88,8 @@ function App() {
   const [paidGuides, setPaidGuides] = useState([]);
   const [authors, setAuthors] = useState([]);
   const [editingAuthor, setEditingAuthor] = useState({}); // { [authorId]: { name, youtube, metafy } }
-
+  const [editResourceChapterDeckSearch, setEditResourceChapterDeckSearch] = useState({}); // { [chapterIndex]: deckSearch }
+  const [showEditResourceChapterDeckDropdown, setShowEditResourceChapterDeckDropdown] = useState(null); // chapterIndex of dropdown showing
 
   // Resource filters for deck page
   const [resourceTypeFilters, setResourceTypeFilters] = useState({
@@ -979,6 +980,15 @@ function App() {
                                   setEditingResource(resource);
                                   setEditDeckSearch(resource.deck?.name || '');
                                   setShowEditDeckDropdown(false);
+                                  // Initialize chapter deck search for existing matchup chapters
+                                  const chapterDeckSearchInit = {};
+                                  resource.chapters?.forEach((chapter, index) => {
+                                    if (chapter.chapterType === 'Matchup' && chapter.opposingDeck) {
+                                      chapterDeckSearchInit[index] = chapter.opposingDeck.name;
+                                    }
+                                  });
+                                  setEditResourceChapterDeckSearch(chapterDeckSearchInit);
+                                  setShowEditResourceChapterDeckDropdown(null);
                                 }}
                                 className="btn btn-secondary"
                                 style={{ fontSize: '0.85rem', padding: '0.25rem 0.75rem' }}
@@ -1162,7 +1172,7 @@ function App() {
                       type="button"
                       className="btn btn-sm btn-primary"
                       onClick={() => {
-                        const newChapter = { title: '', timestamp: '', opponentDeck: '' };
+                        const newChapter = { title: '', timestamp: '', chapterType: 'Guide', opposingDeckId: null };
                         setEditingResource({
                           ...editingResource,
                           chapters: [...(editingResource.chapters || []), newChapter]
@@ -1212,17 +1222,97 @@ function App() {
                               ✗
                             </button>
                           </div>
-                          <input
-                            type="text"
-                            placeholder="Opponent Deck (optional)"
-                            value={chapter.opponentDeck || ''}
-                            onChange={(e) => {
-                              const updatedChapters = [...editingResource.chapters];
-                              updatedChapters[index] = { ...updatedChapters[index], opponentDeck: e.target.value };
-                              setEditingResource({ ...editingResource, chapters: updatedChapters });
-                            }}
-                            style={{ width: '100%', padding: '0.5rem', fontSize: '0.9rem' }}
-                          />
+                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                            <select
+                              value={chapter.chapterType || 'Guide'}
+                              onChange={(e) => {
+                                const updatedChapters = [...editingResource.chapters];
+                                updatedChapters[index] = {
+                                  ...updatedChapters[index],
+                                  chapterType: e.target.value,
+                                  opposingDeckId: e.target.value === 'Matchup' ? updatedChapters[index].opposingDeckId : null
+                                };
+                                setEditingResource({ ...editingResource, chapters: updatedChapters });
+                                if (e.target.value !== 'Matchup') {
+                                  // Clear deck search for this chapter
+                                  setEditResourceChapterDeckSearch({ ...editResourceChapterDeckSearch, [index]: '' });
+                                }
+                              }}
+                              style={{ flex: '0 0 140px', padding: '0.5rem', fontSize: '0.9rem' }}
+                            >
+                              <option value="Guide">Guide</option>
+                              <option value="Matchup">Matchup</option>
+                            </select>
+                            {chapter.chapterType === 'Matchup' && (
+                              <div style={{ flex: 1, position: 'relative' }}>
+                                <input
+                                  type="text"
+                                  placeholder="Search for opposing deck..."
+                                  value={editResourceChapterDeckSearch[index] || ''}
+                                  onChange={(e) => {
+                                    setEditResourceChapterDeckSearch({ ...editResourceChapterDeckSearch, [index]: e.target.value });
+                                    setShowEditResourceChapterDeckDropdown(index);
+                                  }}
+                                  onFocus={() => setShowEditResourceChapterDeckDropdown(index)}
+                                  style={{ width: '100%', padding: '0.5rem', fontSize: '0.9rem' }}
+                                />
+                                {showEditResourceChapterDeckDropdown === index && (
+                                  <div
+                                    className="deck-search-dropdown"
+                                    style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000 }}
+                                  >
+                                    {decks
+                                      .filter(deck => deck.name.toLowerCase().includes((editResourceChapterDeckSearch[index] || '').toLowerCase()))
+                                      .slice(0, 10)
+                                      .map(deck => (
+                                        <div
+                                          key={deck.id}
+                                          className="deck-search-item"
+                                          onClick={() => {
+                                            const updatedChapters = [...editingResource.chapters];
+                                            updatedChapters[index] = { ...updatedChapters[index], opposingDeckId: deck.id };
+                                            setEditingResource({ ...editingResource, chapters: updatedChapters });
+                                            setEditResourceChapterDeckSearch({ ...editResourceChapterDeckSearch, [index]: deck.name });
+                                            setShowEditResourceChapterDeckDropdown(null);
+                                          }}
+                                        >
+                                          <div className="deck-icons-group">
+                                            {deck.icons ? (
+                                              JSON.parse(deck.icons).slice(0, 2).map((iconPath, idx) => (
+                                                <img key={idx} src={iconPath} alt="" className="deck-search-icon" />
+                                              ))
+                                            ) : deck.icon ? (
+                                              <img src={deck.icon} alt="" className="deck-search-icon" />
+                                            ) : (
+                                              <div className="deck-search-icon-placeholder">?</div>
+                                            )}
+                                          </div>
+                                          <span>{deck.name}</span>
+                                        </div>
+                                      ))
+                                    }
+                                  </div>
+                                )}
+                                {chapter.opposingDeckId && (
+                                  <div style={{ marginTop: '0.25rem', fontSize: '0.85rem', color: '#666' }}>
+                                    Selected: <strong>{decks.find(d => d.id === chapter.opposingDeckId)?.name}</strong>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const updatedChapters = [...editingResource.chapters];
+                                        updatedChapters[index] = { ...updatedChapters[index], opposingDeckId: null };
+                                        setEditingResource({ ...editingResource, chapters: updatedChapters });
+                                        setEditResourceChapterDeckSearch({ ...editResourceChapterDeckSearch, [index]: '' });
+                                      }}
+                                      style={{ marginLeft: '0.5rem', fontSize: '0.75rem', padding: '0.125rem 0.5rem', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
+                                    >
+                                      Clear
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -2993,6 +3083,15 @@ function App() {
                           setEditingResource(resource);
                           setEditDeckSearch(resource.deck?.name || '');
                           setShowEditDeckDropdown(false);
+                          // Initialize chapter deck search for existing matchup chapters
+                          const chapterDeckSearchInit = {};
+                          resource.chapters?.forEach((chapter, index) => {
+                            if (chapter.chapterType === 'Matchup' && chapter.opposingDeck) {
+                              chapterDeckSearchInit[index] = chapter.opposingDeck.name;
+                            }
+                          });
+                          setEditResourceChapterDeckSearch(chapterDeckSearchInit);
+                          setShowEditResourceChapterDeckDropdown(null);
                         }}
                       >
                         ✏️ Edit
@@ -3088,6 +3187,15 @@ function App() {
                             setEditingResource(resource);
                             setEditDeckSearch(resource.deck?.name || '');
                             setShowEditDeckDropdown(false);
+                            // Initialize chapter deck search for existing matchup chapters
+                            const chapterDeckSearchInit = {};
+                            resource.chapters?.forEach((chapter, index) => {
+                              if (chapter.chapterType === 'Matchup' && chapter.opposingDeck) {
+                                chapterDeckSearchInit[index] = chapter.opposingDeck.name;
+                              }
+                            });
+                            setEditResourceChapterDeckSearch(chapterDeckSearchInit);
+                            setShowEditResourceChapterDeckDropdown(null);
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                           }}
                           style={{ backgroundColor: '#6c757d', color: 'white' }}
@@ -3579,7 +3687,7 @@ function App() {
                       type="button"
                       className="btn btn-sm btn-primary"
                       onClick={() => {
-                        const newChapter = { title: '', timestamp: '', opponentDeck: '' };
+                        const newChapter = { title: '', timestamp: '', chapterType: 'Guide', opposingDeckId: null };
                         setEditingResource({
                           ...editingResource,
                           chapters: [...(editingResource.chapters || []), newChapter]
@@ -3629,17 +3737,97 @@ function App() {
                               ✗
                             </button>
                           </div>
-                          <input
-                            type="text"
-                            placeholder="Opponent Deck (optional)"
-                            value={chapter.opponentDeck || ''}
-                            onChange={(e) => {
-                              const updatedChapters = [...editingResource.chapters];
-                              updatedChapters[index] = { ...updatedChapters[index], opponentDeck: e.target.value };
-                              setEditingResource({ ...editingResource, chapters: updatedChapters });
-                            }}
-                            style={{ width: '100%', padding: '0.5rem', fontSize: '0.9rem' }}
-                          />
+                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                            <select
+                              value={chapter.chapterType || 'Guide'}
+                              onChange={(e) => {
+                                const updatedChapters = [...editingResource.chapters];
+                                updatedChapters[index] = {
+                                  ...updatedChapters[index],
+                                  chapterType: e.target.value,
+                                  opposingDeckId: e.target.value === 'Matchup' ? updatedChapters[index].opposingDeckId : null
+                                };
+                                setEditingResource({ ...editingResource, chapters: updatedChapters });
+                                if (e.target.value !== 'Matchup') {
+                                  // Clear deck search for this chapter
+                                  setEditResourceChapterDeckSearch({ ...editResourceChapterDeckSearch, [index]: '' });
+                                }
+                              }}
+                              style={{ flex: '0 0 140px', padding: '0.5rem', fontSize: '0.9rem' }}
+                            >
+                              <option value="Guide">Guide</option>
+                              <option value="Matchup">Matchup</option>
+                            </select>
+                            {chapter.chapterType === 'Matchup' && (
+                              <div style={{ flex: 1, position: 'relative' }}>
+                                <input
+                                  type="text"
+                                  placeholder="Search for opposing deck..."
+                                  value={editResourceChapterDeckSearch[index] || ''}
+                                  onChange={(e) => {
+                                    setEditResourceChapterDeckSearch({ ...editResourceChapterDeckSearch, [index]: e.target.value });
+                                    setShowEditResourceChapterDeckDropdown(index);
+                                  }}
+                                  onFocus={() => setShowEditResourceChapterDeckDropdown(index)}
+                                  style={{ width: '100%', padding: '0.5rem', fontSize: '0.9rem' }}
+                                />
+                                {showEditResourceChapterDeckDropdown === index && (
+                                  <div
+                                    className="deck-search-dropdown"
+                                    style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000 }}
+                                  >
+                                    {decks
+                                      .filter(deck => deck.name.toLowerCase().includes((editResourceChapterDeckSearch[index] || '').toLowerCase()))
+                                      .slice(0, 10)
+                                      .map(deck => (
+                                        <div
+                                          key={deck.id}
+                                          className="deck-search-item"
+                                          onClick={() => {
+                                            const updatedChapters = [...editingResource.chapters];
+                                            updatedChapters[index] = { ...updatedChapters[index], opposingDeckId: deck.id };
+                                            setEditingResource({ ...editingResource, chapters: updatedChapters });
+                                            setEditResourceChapterDeckSearch({ ...editResourceChapterDeckSearch, [index]: deck.name });
+                                            setShowEditResourceChapterDeckDropdown(null);
+                                          }}
+                                        >
+                                          <div className="deck-icons-group">
+                                            {deck.icons ? (
+                                              JSON.parse(deck.icons).slice(0, 2).map((iconPath, idx) => (
+                                                <img key={idx} src={iconPath} alt="" className="deck-search-icon" />
+                                              ))
+                                            ) : deck.icon ? (
+                                              <img src={deck.icon} alt="" className="deck-search-icon" />
+                                            ) : (
+                                              <div className="deck-search-icon-placeholder">?</div>
+                                            )}
+                                          </div>
+                                          <span>{deck.name}</span>
+                                        </div>
+                                      ))
+                                    }
+                                  </div>
+                                )}
+                                {chapter.opposingDeckId && (
+                                  <div style={{ marginTop: '0.25rem', fontSize: '0.85rem', color: '#666' }}>
+                                    Selected: <strong>{decks.find(d => d.id === chapter.opposingDeckId)?.name}</strong>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const updatedChapters = [...editingResource.chapters];
+                                        updatedChapters[index] = { ...updatedChapters[index], opposingDeckId: null };
+                                        setEditingResource({ ...editingResource, chapters: updatedChapters });
+                                        setEditResourceChapterDeckSearch({ ...editResourceChapterDeckSearch, [index]: '' });
+                                      }}
+                                      style={{ marginLeft: '0.5rem', fontSize: '0.75rem', padding: '0.125rem 0.5rem', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
+                                    >
+                                      Clear
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -4051,6 +4239,15 @@ function App() {
                           setEditingResource(resource);
                           setEditDeckSearch(resource.deck?.name || '');
                           setShowEditDeckDropdown(false);
+                          // Initialize chapter deck search for existing matchup chapters
+                          const chapterDeckSearchInit = {};
+                          resource.chapters?.forEach((chapter, index) => {
+                            if (chapter.chapterType === 'Matchup' && chapter.opposingDeck) {
+                              chapterDeckSearchInit[index] = chapter.opposingDeck.name;
+                            }
+                          });
+                          setEditResourceChapterDeckSearch(chapterDeckSearchInit);
+                          setShowEditResourceChapterDeckDropdown(null);
                           setShowReviewQueue(false);
                         }}
                       >
