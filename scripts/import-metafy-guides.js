@@ -50,12 +50,45 @@ async function importMetafyGuides() {
           }
         }
 
+        // Create or find author profile
+        let authorId = null;
+        if (guide.author) {
+          const slug = guide.author.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+          // Check if author exists
+          let author = await prisma.author.findUnique({
+            where: { slug }
+          });
+
+          if (!author) {
+            // Create new author with Metafy link if available
+            author = await prisma.author.create({
+              data: {
+                name: guide.author,
+                slug: slug,
+                metafy: guide.metafyUrl || null
+              }
+            });
+            console.log(`   📝 Created new author: ${guide.author}`);
+          } else if (guide.metafyUrl && !author.metafy) {
+            // Update existing author with Metafy URL if not already set
+            author = await prisma.author.update({
+              where: { id: author.id },
+              data: { metafy: guide.metafyUrl }
+            });
+            console.log(`   📝 Updated author ${guide.author} with Metafy URL`);
+          }
+
+          authorId = author.id;
+        }
+
         // Create the resource
         const resource = await prisma.resource.create({
           data: {
             title: guide.title,
             url: guide.url,
-            author: guide.author,
+            author: guide.author, // Keep legacy field for backwards compatibility
+            authorId: authorId, // Link to author profile
             type: 'Guide',
             platform: 'Metafy',
             accessType: 'Paid',
