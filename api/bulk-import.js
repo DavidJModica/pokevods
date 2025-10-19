@@ -117,7 +117,16 @@ module.exports = async function handler(req, res) {
         }
 
         // Fetch YouTube metadata
-        const youtubeResponse = await fetch(`http://localhost:3002/api/youtube?url=${encodeURIComponent(url)}`);
+        // Use relative URL to work in both local and production environments
+        const apiBaseUrl = process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : 'http://localhost:3002';
+        const youtubeResponse = await fetch(`${apiBaseUrl}/api/youtube?url=${encodeURIComponent(url)}`);
+
+        if (!youtubeResponse.ok) {
+          throw new Error(`YouTube API returned ${youtubeResponse.status}: ${await youtubeResponse.text()}`);
+        }
+
         const youtubeData = await youtubeResponse.json();
 
         // Check if video is from before format date
