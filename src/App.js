@@ -3024,6 +3024,179 @@ function App() {
               )}
             </div>
           )}
+
+          {/* Manage Authors Tab */}
+          {adminTab === 'manageAuthors' && (
+            <div>
+              <h2>Manage Authors ({authors.length})</h2>
+              <p style={{ color: '#666', marginBottom: '1.5rem' }}>
+                Edit author profiles including name, YouTube link, and Metafy link.
+              </p>
+
+              {authors.length === 0 ? (
+                <p>No authors found.</p>
+              ) : (
+                authors.map((author) => {
+                  const editData = editingAuthor[author.id] || {
+                    name: author.name,
+                    youtube: author.youtube || '',
+                    metafy: author.metafy || ''
+                  };
+
+                  return (
+                    <div key={author.id} style={{
+                      border: '1px solid #ddd',
+                      borderRadius: '8px',
+                      padding: '1.5rem',
+                      marginBottom: '1rem',
+                      backgroundColor: '#fff'
+                    }}>
+                      <div style={{ marginBottom: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <strong style={{ fontSize: '1.1rem' }}>{author.name}</strong>
+                          <span style={{
+                            fontSize: '0.7rem',
+                            backgroundColor: '#6c757d',
+                            color: 'white',
+                            padding: '2px 6px',
+                            borderRadius: '3px'
+                          }}>{author._count?.resources || 0} resources</span>
+                        </div>
+
+                        {/* Name Input */}
+                        <div style={{ marginBottom: '1rem' }}>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                            Author Name:
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Author name..."
+                            value={editData.name}
+                            onChange={(e) => {
+                              setEditingAuthor({
+                                ...editingAuthor,
+                                [author.id]: { ...editData, name: e.target.value }
+                              });
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '0.75rem',
+                              fontSize: '1rem',
+                              borderRadius: '6px',
+                              border: '2px solid #ddd'
+                            }}
+                          />
+                        </div>
+
+                        {/* YouTube Link Input */}
+                        <div style={{ marginBottom: '1rem' }}>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                            YouTube Channel URL:
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="https://www.youtube.com/@channel..."
+                            value={editData.youtube}
+                            onChange={(e) => {
+                              setEditingAuthor({
+                                ...editingAuthor,
+                                [author.id]: { ...editData, youtube: e.target.value }
+                              });
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '0.75rem',
+                              fontSize: '1rem',
+                              borderRadius: '6px',
+                              border: '2px solid #ddd'
+                            }}
+                          />
+                        </div>
+
+                        {/* Metafy Link Input */}
+                        <div style={{ marginBottom: '1rem' }}>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                            Metafy Profile URL:
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="https://metafy.gg/@username..."
+                            value={editData.metafy}
+                            onChange={(e) => {
+                              setEditingAuthor({
+                                ...editingAuthor,
+                                [author.id]: { ...editData, metafy: e.target.value }
+                              });
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '0.75rem',
+                              fontSize: '1rem',
+                              borderRadius: '6px',
+                              border: '2px solid #ddd'
+                            }}
+                          />
+                        </div>
+
+                        {/* Save Button */}
+                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                          <button
+                            type="button"
+                            className="btn btn-primary"
+                            style={{ padding: '0.5rem 1.5rem', fontSize: '0.9rem' }}
+                            onClick={async () => {
+                              try {
+                                const response = await fetch('/api/authors', {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    id: author.id,
+                                    name: editData.name,
+                                    youtube: editData.youtube || null,
+                                    metafy: editData.metafy || null
+                                  })
+                                });
+
+                                if (response.ok) {
+                                  await fetchAuthors(); // Refresh the list
+                                  alert(`Successfully updated "${editData.name}"`);
+                                } else {
+                                  alert('Failed to update author');
+                                }
+                              } catch (error) {
+                                console.error('Error updating author:', error);
+                                alert('Failed to update author');
+                              }
+                            }}
+                          >
+                            💾 Save Changes
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            style={{ padding: '0.5rem 1.5rem', fontSize: '0.9rem' }}
+                            onClick={() => {
+                              setEditingAuthor({
+                                ...editingAuthor,
+                                [author.id]: {
+                                  name: author.name,
+                                  youtube: author.youtube || '',
+                                  metafy: author.metafy || ''
+                                }
+                              });
+                            }}
+                          >
+                            ↺ Reset
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+
         </div>
 
         {/* Edit Resource Modal (can be opened from review queue) */}
