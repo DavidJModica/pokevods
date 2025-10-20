@@ -1487,64 +1487,66 @@ function App() {
           </button>
         </header>
 
-        {/* Admin Toolbar */}
-        <div style={{
-          background: '#f8f9fa',
-          borderBottom: '1px solid #ddd',
-          padding: '0.75rem 2rem',
-          display: 'flex',
-          gap: '0.75rem',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <button
-            onClick={() => setShowAdmin(!showAdmin)}
-            className="btn btn-admin"
-            style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-          >
-            {showAdmin ? '🔒 Admin' : '🔓 Admin'}
-          </button>
-          {showAdmin && (
-            <>
-              <button
-                onClick={() => {
-                  setCurrentView('admin');
-                  setAdminTab('bulkImport');
-                }}
-                className="btn btn-secondary"
-                style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-              >
-                ⚙️ Admin Panel
-              </button>
-              <button
-                onClick={() => {
-                  fetchPendingResources();
-                  setCurrentView('admin');
-                  setAdminTab('reviewQueue');
-                }}
-                className="btn btn-secondary"
-                style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-              >
-                📋 Review Queue {pendingResources.length > 0 && `(${pendingResources.length})`}
-              </button>
-              <button
-                onClick={() => {
-                  const icons = selectedDeck.icons ? JSON.parse(selectedDeck.icons) : [];
-                  setEditingDeck({
-                    id: selectedDeck.id,
-                    name: selectedDeck.name,
-                    icon1: icons[0] || '',
-                    icon2: icons[1] || ''
-                  });
-                }}
-                className="btn btn-primary"
-                style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-              >
-                ✏️ Edit Deck
-              </button>
-            </>
-          )}
-        </div>
+        {/* Admin Toolbar - Only visible when authenticated */}
+        {isAuthenticated && (
+          <div style={{
+            background: '#f8f9fa',
+            borderBottom: '1px solid #ddd',
+            padding: '0.75rem 2rem',
+            display: 'flex',
+            gap: '0.75rem',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <button
+              onClick={() => setShowAdmin(!showAdmin)}
+              className="btn btn-admin"
+              style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
+            >
+              {showAdmin ? '🔒 Admin' : '🔓 Admin'}
+            </button>
+            {showAdmin && (
+              <>
+                <button
+                  onClick={() => {
+                    setCurrentView('admin');
+                    setAdminTab('bulkImport');
+                  }}
+                  className="btn btn-secondary"
+                  style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
+                >
+                  ⚙️ Admin Panel
+                </button>
+                <button
+                  onClick={() => {
+                    fetchPendingResources();
+                    setCurrentView('admin');
+                    setAdminTab('reviewQueue');
+                  }}
+                  className="btn btn-secondary"
+                  style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
+                >
+                  📋 Review Queue {pendingResources.length > 0 && `(${pendingResources.length})`}
+                </button>
+                <button
+                  onClick={() => {
+                    const icons = selectedDeck.icons ? JSON.parse(selectedDeck.icons) : [];
+                    setEditingDeck({
+                      id: selectedDeck.id,
+                      name: selectedDeck.name,
+                      icon1: icons[0] || '',
+                      icon2: icons[1] || ''
+                    });
+                  }}
+                  className="btn btn-primary"
+                  style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
+                >
+                  ✏️ Edit Deck
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         <div className="deck-detail">
           <div className="deck-header">
@@ -4238,60 +4240,62 @@ function App() {
         </div>
       </header>
 
-      {/* Admin Toolbar */}
-      <div style={{
-        background: '#f8f9fa',
-        borderBottom: '1px solid #ddd',
-        padding: '0.75rem 2rem',
-        display: 'flex',
-        gap: '0.75rem',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <button
-          onClick={() => setShowAdmin(!showAdmin)}
-          className="btn btn-admin"
-          style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-        >
-          {showAdmin ? '🔒 Admin' : '🔓 Admin'}
-        </button>
-        {showAdmin && (
-          <>
-            <button
-              onClick={() => {
-                setCurrentView('admin');
-                setAdminTab('bulkImport');
-              }}
-              className="btn btn-secondary"
-              style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-            >
-              ⚙️ Admin Panel
-            </button>
-            <button
-              onClick={() => {
-                fetchPendingResources();
-                setCurrentView('admin');
-                setAdminTab('reviewQueue');
-              }}
-              className="btn btn-secondary"
-              style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-            >
-              📋 Review Queue {pendingResources.length > 0 && `(${pendingResources.length})`}
-            </button>
-            <button
-              onClick={() => {
-                fetchMatchupResources();
-                setCurrentView('admin');
-                setAdminTab('matchupQueue');
-              }}
-              className="btn btn-secondary"
-              style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-            >
-              🎯 Matchup Queue {matchupResources.length > 0 && `(${matchupResources.length})`}
-            </button>
-          </>
-        )}
-      </div>
+      {/* Admin Toolbar - Only visible when authenticated */}
+      {isAuthenticated && (
+        <div style={{
+          background: '#f8f9fa',
+          borderBottom: '1px solid #ddd',
+          padding: '0.75rem 2rem',
+          display: 'flex',
+          gap: '0.75rem',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <button
+            onClick={() => setShowAdmin(!showAdmin)}
+            className="btn btn-admin"
+            style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
+          >
+            {showAdmin ? '🔒 Admin' : '🔓 Admin'}
+          </button>
+          {showAdmin && (
+            <>
+              <button
+                onClick={() => {
+                  setCurrentView('admin');
+                  setAdminTab('bulkImport');
+                }}
+                className="btn btn-secondary"
+                style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
+              >
+                ⚙️ Admin Panel
+              </button>
+              <button
+                onClick={() => {
+                  fetchPendingResources();
+                  setCurrentView('admin');
+                  setAdminTab('reviewQueue');
+                }}
+                className="btn btn-secondary"
+                style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
+              >
+                📋 Review Queue {pendingResources.length > 0 && `(${pendingResources.length})`}
+              </button>
+              <button
+                onClick={() => {
+                  fetchMatchupResources();
+                  setCurrentView('admin');
+                  setAdminTab('matchupQueue');
+                }}
+                className="btn btn-secondary"
+                style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
+              >
+                🎯 Matchup Queue {matchupResources.length > 0 && `(${matchupResources.length})`}
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="search-section">
         <div className="search-bar-fullwidth">
