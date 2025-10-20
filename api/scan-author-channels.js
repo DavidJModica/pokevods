@@ -234,14 +234,33 @@ module.exports = async function handler(req, res) {
         console.log(`   Found ${videoUrls.length} videos`);
         authorResult.videosFound = videoUrls.length;
 
-        for (const videoUrl of videoUrls) {
-          // Check if video already exists in database
-          const existingVideo = await prisma.resource.findFirst({
-            where: { url: videoUrl }
+        // Batch check all videos against database at once (more efficient)
+        let existingVideos = [];
+        try {
+          existingVideos = await prisma.resource.findMany({
+            where: {
+              url: {
+                in: videoUrls
+              }
+            },
+            select: {
+              url: true,
+              id: true
+            }
           });
+          console.log(`   Database check: ${existingVideos.length} already exist`);
+        } catch (dbError) {
+          console.error(`   ❌ Batch database check error:`, dbError.message);
+        }
 
-          if (existingVideo) {
-            console.log(`   ⏭️  Skipping (already exists): ${videoUrl}`);
+        // Create a Set for fast lookup
+        const existingUrls = new Set(existingVideos.map(v => v.url));
+
+        for (const videoUrl of videoUrls) {
+          // Check if video already exists (using batch results)
+          if (existingUrls.has(videoUrl)) {
+            const existingVideo = existingVideos.find(v => v.url === videoUrl);
+            console.log(`   ⏭️  Skipping (already exists): ${videoUrl} (ID: ${existingVideo?.id})`);
             authorResult.videosSkipped++;
             continue; // Skip if already in database
           }
