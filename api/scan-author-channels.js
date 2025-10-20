@@ -319,6 +319,13 @@ module.exports = async function handler(req, res) {
           } else {
             publicationDate = new Date(metadata.publicationDate);
 
+            // INCREMENTAL SCANNING: Stop if video is older than last scan
+            // This optimization prevents rescanning old videos we've already processed
+            if (mostRecentVideoDate && publicationDate <= mostRecentVideoDate) {
+              console.log(`   🛑 Stopping scan - reached videos older than last scan (${mostRecentVideoDate.toLocaleDateString()})`);
+              break; // Exit the loop, no need to check older videos
+            }
+
             // Skip if before format date
             if (publicationDate < MEGA_EVOLUTIONS_FORMAT_DATE) {
               console.log(`   ⏭️  Skipping (old): ${metadata.title} (${publicationDate.toLocaleDateString()})`);
