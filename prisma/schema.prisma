@@ -40,6 +40,8 @@ model Author {
   discord        String?
   website        String?
   metafy         String?   // Metafy profile URL
+  lastScanDate   DateTime? // Last time channel was scanned for new videos
+  lastVideoDate  DateTime? // Publication date of most recent video found
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -84,4 +86,12 @@ model Chapter {
   opposingDeck    Deck?    @relation("OpposingDeck", fields: [opposingDeckId], references: [id])
 
   createdAt       DateTime @default(now())
+}
+
+model RejectedVideo {
+  id              Int      @id @default(autoincrement())
+  url             String   @unique // The video URL that was rejected
+  title           String?  // Title when it was rejected
+  reason          String?  // Why it was rejected (optional)
+  rejectedAt      DateTime @default(now())
 }

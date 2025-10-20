@@ -255,8 +255,34 @@ module.exports = async function handler(req, res) {
           console.error(`   ❌ Batch database check error:`, dbError.message);
         }
 
-        // Create a Set for fast lookup
+        // Also check for rejected videos
+        let rejectedVideos = [];
+        try {
+          rejectedVideos = await prisma.rejectedVideo.findMany({
+            where: {
+              url: {
+                in: videoUrls
+              }
+            },
+            select: {
+              url: true,
+              id: true,
+              reason: true
+            }
+          });
+          if (rejectedVideos.length > 0) {
+            console.log(`   Rejected video check: ${rejectedVideos.length} previously rejected`);
+          }
+        } catch (dbError) {
+          console.error(`   ❌ Rejected video check error:`, dbError.message);
+        }
+
+        // Create Sets for fast lookup
         const existingUrls = new Set(existingVideos.map(v => v.url));
+        const rejectedUrls = new Set(rejectedVideos.map(v => v.url));
+
+        // Track the most recent video date we process
+        let mostRecentVideoDate = author.lastVideoDate ? new Date(author.lastVideoDate) : null;
 
         for (const videoUrl of videoUrls) {
           // Check if video already exists (using batch results)
@@ -265,6 +291,14 @@ module.exports = async function handler(req, res) {
             console.log(`   ⏭️  Skipping (already exists): ${videoUrl} (ID: ${existingVideo?.id})`);
             authorResult.videosSkipped++;
             continue; // Skip if already in database
+          }
+
+          // Check if video was previously rejected
+          if (rejectedUrls.has(videoUrl)) {
+            const rejectedVideo = rejectedVideos.find(v => v.url === videoUrl);
+            console.log(`   ⏭️  Skipping (rejected): ${videoUrl} - Reason: ${rejectedVideo?.reason || 'N/A'}`);
+            authorResult.videosSkipped++;
+            continue; // Skip if previously rejected
           }
 
           // Fetch video metadata
@@ -333,7 +367,26 @@ module.exports = async function handler(req, res) {
             date: publicationDate.toLocaleDateString()
           });
 
+          // Track most recent video date
+          if (!mostRecentVideoDate || publicationDate > mostRecentVideoDate) {
+            mostRecentVideoDate = publicationDate;
+          }
+
           results.videosAdded++;
+        }
+
+        // Update author's last scan date and most recent video date
+        try {
+          await prisma.author.update({
+            where: { id: author.id },
+            data: {
+              lastScanDate: new Date(),
+              lastVideoDate: mostRecentVideoDate
+            }
+          });
+          console.log(`   📅 Updated author scan tracking (last video: ${mostRecentVideoDate ? mostRecentVideoDate.toLocaleDateString() : 'N/A'})`);
+        } catch (updateError) {
+          console.error(`   ❌ Failed to update author scan tracking:`, updateError.message);
         }
 
         results.newVideosFound += authorResult.videosFound;
