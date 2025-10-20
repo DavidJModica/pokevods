@@ -166,6 +166,11 @@ function App() {
     try {
       setLoading(true);
       const response = await fetch('/api/initial-data');
+
+      if (!response.ok) {
+        throw new Error('Initial data endpoint failed');
+      }
+
       const result = await response.json();
 
       if (result.success) {
@@ -173,9 +178,18 @@ function App() {
         setTierListResources(result.data.tierListResources);
         setTournamentResources(result.data.tournamentResources);
         setPaidGuides(result.data.paidGuides);
+      } else {
+        throw new Error('Initial data response not successful');
       }
     } catch (error) {
-      console.error('Error fetching initial data:', error);
+      console.error('Error fetching initial data, falling back to individual endpoints:', error);
+      // Fallback to old method if new endpoint fails
+      await Promise.all([
+        fetchDecks(),
+        fetchTierListResources(),
+        fetchTournamentResources(),
+        fetchPaidGuidesResources()
+      ]);
     } finally {
       setLoading(false);
     }
