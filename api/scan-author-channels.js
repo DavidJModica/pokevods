@@ -3,19 +3,69 @@ const fetch = require('node-fetch');
 
 const MEGA_EVOLUTIONS_FORMAT_DATE = new Date('2025-09-26');
 
+// Function to extract channel ID from various YouTube URL formats
+function extractChannelId(channelUrl) {
+  // Handle @username format
+  const usernameMatch = channelUrl.match(/youtube\.com\/@([^\/\?]+)/);
+  if (usernameMatch) {
+    return { type: 'username', id: usernameMatch[1] };
+  }
+
+  // Handle /channel/ID format
+  const channelMatch = channelUrl.match(/youtube\.com\/channel\/([^\/\?]+)/);
+  if (channelMatch) {
+    return { type: 'channel', id: channelMatch[1] };
+  }
+
+  // Handle /c/CustomName format
+  const customMatch = channelUrl.match(/youtube\.com\/c\/([^\/\?]+)/);
+  if (customMatch) {
+    return { type: 'custom', id: customMatch[1] };
+  }
+
+  return null;
+}
+
 // Function to extract video URLs from YouTube channel page
 async function fetchChannelVideos(channelUrl) {
   try {
-    const response = await fetch(channelUrl);
+    // Make sure we're fetching the /videos page
+    let videosUrl = channelUrl;
+    if (!videosUrl.includes('/videos')) {
+      videosUrl = videosUrl.replace(/\/$/, '') + '/videos';
+    }
+
+    const response = await fetch(videosUrl);
     const html = await response.text();
 
-    // Extract video IDs using regex
-    const videoIdPattern = /"videoId":"([^"]+)"/g;
-    const matches = [...html.matchAll(videoIdPattern)];
-    const videoIds = [...new Set(matches.map(match => match[1]))];
+    // Try multiple patterns to extract video IDs
+    const videoIds = new Set();
+
+    // Pattern 1: "videoId":"ID"
+    const pattern1 = /"videoId":"([^"]+)"/g;
+    let matches = [...html.matchAll(pattern1)];
+    matches.forEach(match => videoIds.add(match[1]));
+
+    // Pattern 2: /watch?v=ID in links
+    const pattern2 = /\/watch\?v=([a-zA-Z0-9_-]{11})/g;
+    matches = [...html.matchAll(pattern2)];
+    matches.forEach(match => videoIds.add(match[1]));
+
+    // Pattern 3: "videoId": "ID" (with spaces)
+    const pattern3 = /"videoId"\s*:\s*"([^"]+)"/g;
+    matches = [...html.matchAll(pattern3)];
+    matches.forEach(match => videoIds.add(match[1]));
+
+    console.log(`   Extracted ${videoIds.size} unique video IDs from HTML`);
+
+    // Log first few video IDs for debugging
+    if (videoIds.size > 0) {
+      const firstFew = Array.from(videoIds).slice(0, 5);
+      console.log(`   First few video IDs: ${firstFew.join(', ')}`);
+    }
 
     // Convert to full URLs
-    const videoUrls = videoIds.map(id => `https://www.youtube.com/watch?v=${id}`);
+    const videoUrls = Array.from(videoIds).map(id => `https://www.youtube.com/watch?v=${id}`);
 
     return videoUrls;
   } catch (error) {
@@ -179,14 +229,8 @@ module.exports = async function handler(req, res) {
       };
 
       try {
-        // Convert channel URL to videos URL if needed
-        let channelUrl = author.youtube;
-        if (!channelUrl.includes('/videos')) {
-          channelUrl = channelUrl.replace(/\/$/, '') + '/videos';
-        }
-
-        // Fetch video URLs from channel
-        const videoUrls = await fetchChannelVideos(channelUrl);
+        // Fetch video URLs from channel (function handles /videos internally)
+        const videoUrls = await fetchChannelVideos(author.youtube);
         console.log(`   Found ${videoUrls.length} videos`);
         authorResult.videosFound = videoUrls.length;
 
@@ -197,14 +241,17 @@ module.exports = async function handler(req, res) {
           });
 
           if (existingVideo) {
+            console.log(`   ⏭️  Skipping (already exists): ${videoUrl}`);
             authorResult.videosSkipped++;
             continue; // Skip if already in database
           }
 
           // Fetch video metadata
+          console.log(`   📥 Fetching metadata for: ${videoUrl}`);
           const metadata = await fetchYouTubeMetadata(videoUrl);
 
           if (!metadata) {
+            console.log(`   ⏭️  Skipping (failed to fetch metadata): ${videoUrl}`);
             authorResult.videosSkipped++;
             continue;
           }
