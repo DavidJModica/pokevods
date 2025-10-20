@@ -3189,7 +3189,7 @@ function App() {
                           <div key={idx} style={{ padding: '0.75rem', marginBottom: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.9rem' }}>
                             <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>{result.name}</div>
                             <div style={{ color: '#666' }}>
-                              Found: {result.videosFound} | Added: {result.videosAdded} | Skipped: {result.videosSkipped}
+                              Found: {result.videosFound} | Already in DB: {result.videosAlreadyInDb || 0} | Added: {result.videosAdded} | Skipped: {result.videosSkipped}
                               {result.error && <span style={{ color: '#dc3545' }}> | Error: {result.error}</span>}
                             </div>
                             {result.addedVideos && result.addedVideos.length > 0 && (

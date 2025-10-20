@@ -225,6 +225,7 @@ module.exports = async function handler(req, res) {
         videosFound: 0,
         videosAdded: 0,
         videosSkipped: 0,
+        videosAlreadyInDb: 0,
         addedVideos: []
       };
 
@@ -248,6 +249,7 @@ module.exports = async function handler(req, res) {
               id: true
             }
           });
+          authorResult.videosAlreadyInDb = existingVideos.length;
           console.log(`   Database check: ${existingVideos.length} already exist`);
         } catch (dbError) {
           console.error(`   ❌ Batch database check error:`, dbError.message);
@@ -275,18 +277,20 @@ module.exports = async function handler(req, res) {
             continue;
           }
 
-          // Skip videos without publication date or before format date
+          // Handle publication date - use current date as fallback if missing
+          let publicationDate;
           if (!metadata.publicationDate) {
-            console.log(`   ⏭️  Skipping (no date): ${metadata.title}`);
-            authorResult.videosSkipped++;
-            continue;
-          }
+            console.log(`   ⚠️  No date found, using today's date: ${metadata.title}`);
+            publicationDate = new Date(); // Use today's date as fallback
+          } else {
+            publicationDate = new Date(metadata.publicationDate);
 
-          const videoDate = new Date(metadata.publicationDate);
-          if (videoDate < MEGA_EVOLUTIONS_FORMAT_DATE) {
-            console.log(`   ⏭️  Skipping (old): ${metadata.title} (${videoDate.toLocaleDateString()})`);
-            authorResult.videosSkipped++;
-            continue;
+            // Skip if before format date
+            if (publicationDate < MEGA_EVOLUTIONS_FORMAT_DATE) {
+              console.log(`   ⏭️  Skipping (old): ${metadata.title} (${publicationDate.toLocaleDateString()})`);
+              authorResult.videosSkipped++;
+              continue;
+            }
           }
 
           // Auto-detect deck
@@ -312,7 +316,7 @@ module.exports = async function handler(req, res) {
               authorId: author.id,
               platform: 'YouTube',
               accessType: 'Free',
-              publicationDate: new Date(metadata.publicationDate),
+              publicationDate: publicationDate, // Use the processed date (either from metadata or today's date)
               thumbnail: metadata.thumbnail,
               status: deckId ? 'approved' : 'pending' // Auto-approve if deck detected, otherwise pending
             }
