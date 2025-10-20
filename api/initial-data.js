@@ -5,6 +5,10 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Add caching headers - cache for 5 minutes
+  // This reduces server load and speeds up page loads for returning visitors
+  res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+
   try {
     // Fetch all initial data in parallel for better performance
     const [decks, tierListResources, tournamentResources, paidGuides] = await Promise.all([

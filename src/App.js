@@ -1157,7 +1157,7 @@ function App() {
                           )}
                         </div>
                         {resource.thumbnail && (
-                          <img src={resource.thumbnail} alt={resource.title} className="resource-thumbnail" />
+                          <img src={resource.thumbnail} alt={resource.title} className="resource-thumbnail" loading="lazy" />
                         )}
                       </div>
 
@@ -1764,7 +1764,7 @@ function App() {
                 </div>
                 {newResource.thumbnail && (
                   <div className="thumbnail-preview">
-                    <img src={newResource.thumbnail} alt="Thumbnail preview" />
+                    <img src={newResource.thumbnail} alt="Thumbnail preview" loading="lazy" />
                   </div>
                 )}
                 <textarea
@@ -1921,7 +1921,7 @@ function App() {
                     <div className="resource-content">
                       {resource.thumbnail && (
                         <div className="resource-thumbnail">
-                          <img src={resource.thumbnail} alt={resource.title} />
+                          <img src={resource.thumbnail} alt={resource.title} loading="lazy" />
                         </div>
                       )}
                       <div className="resource-details">

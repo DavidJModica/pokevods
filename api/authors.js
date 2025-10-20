@@ -18,6 +18,10 @@ module.exports = async function handler(req, res) {
       case 'GET': {
         const { slug, id } = req.query;
 
+        // Add caching headers for GET requests
+        // Cache for 10 minutes - author data changes infrequently
+        res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=1200');
+
         // Get single author by slug or id
         if (slug || id) {
           const author = await prisma.author.findUnique({

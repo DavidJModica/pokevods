@@ -18,6 +18,14 @@ module.exports = async function handler(req, res) {
       case 'GET': {
         const { id, search, format, archetype } = req.query;
 
+        // Add caching headers for GET requests
+        // Cache for 5 minutes for list queries, 10 minutes for single deck
+        if (id) {
+          res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=1200');
+        } else {
+          res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+        }
+
         // Get single deck by ID
         if (id) {
           const deck = await prisma.deck.findUnique({
