@@ -94,6 +94,11 @@ function App() {
   const [channelScanResults, setChannelScanResults] = useState(null);
   const [selectedAuthorsForScan, setSelectedAuthorsForScan] = useState(new Set()); // Set of author IDs
 
+  // Admin authentication
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+
   // Resource filters for deck page
   const [resourceTypeFilters, setResourceTypeFilters] = useState({
     'Guide': true,
