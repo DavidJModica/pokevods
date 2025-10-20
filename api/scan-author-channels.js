@@ -330,7 +330,7 @@ module.exports = async function handler(req, res) {
             url: videoUrl,
             deck: detectedDeckName || 'Not detected',
             status: deckId ? 'approved' : 'pending',
-            date: videoDate.toLocaleDateString()
+            date: publicationDate.toLocaleDateString()
           });
 
           results.videosAdded++;
