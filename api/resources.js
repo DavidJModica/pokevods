@@ -292,11 +292,48 @@ module.exports = async function handler(req, res) {
           return res.status(400).json({ error: 'Resource ID is required' });
         }
 
+        // Get the resource details before deleting
+        const resource = await prisma.resource.findUnique({
+          where: { id: parseInt(id) },
+          select: {
+            id: true,
+            url: true,
+            title: true
+          }
+        });
+
+        if (!resource) {
+          return res.status(404).json({ error: 'Resource not found' });
+        }
+
+        // Add to rejected videos table (upsert in case it already exists)
+        // This prevents the scanner from re-adding this video in future scans
+        try {
+          await prisma.rejectedVideo.upsert({
+            where: { url: resource.url },
+            update: {
+              title: resource.title,
+              reason: 'Rejected by admin'
+            },
+            create: {
+              url: resource.url,
+              title: resource.title,
+              reason: 'Rejected by admin'
+            }
+          });
+        } catch (rejectError) {
+          console.error('Failed to add to rejected videos:', rejectError.message);
+          // Continue with deletion even if reject tracking fails
+        }
+
+        // Delete the resource
         await prisma.resource.delete({
           where: { id: parseInt(id) }
         });
 
-        return res.status(200).json({ message: 'Resource deleted successfully' });
+        return res.status(200).json({
+          message: 'Resource deleted and will not be re-added in future scans'
+        });
       }
 
       default:
