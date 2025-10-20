@@ -70,6 +70,14 @@ model Resource {
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  @@index([deckId, publicationDate]) // For fetching deck resources sorted by date
+  @@index([authorId, publicationDate]) // For fetching author resources sorted by date
+  @@index([status]) // For filtering pending/approved resources
+  @@index([type]) // For filtering by resource type
+  @@index([platform]) // For filtering by platform
+  @@index([publicationDate]) // For date-based queries
+  @@index([url]) // For checking if video already exists
 }
 
 model Chapter {
@@ -86,6 +94,9 @@ model Chapter {
   opposingDeck    Deck?    @relation("OpposingDeck", fields: [opposingDeckId], references: [id])
 
   createdAt       DateTime @default(now())
+
+  @@index([resourceId]) // For fetching chapters by resource
+  @@index([opposingDeckId]) // For finding matchup chapters by opposing deck
 }
 
 model RejectedVideo {
