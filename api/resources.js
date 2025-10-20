@@ -18,6 +18,13 @@ module.exports = async function handler(req, res) {
       case 'GET': {
         const { deckId, id, status, type, accessType } = req.query;
 
+        // Add caching headers for GET requests
+        // Don't cache pending resources (admin data changes frequently)
+        // Cache approved resources for 5 minutes
+        if (status !== 'pending') {
+          res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+        }
+
         // Get single resource by ID
         if (id) {
           const resource = await prisma.resource.findUnique({
