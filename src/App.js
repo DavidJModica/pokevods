@@ -53,7 +53,6 @@ function App() {
   const [parsedChapters, setParsedChapters] = useState([]);
   const [bulkImportSource, setBulkImportSource] = useState('');
   const [bulkImporting, setBulkImporting] = useState(false);
-  const [showBulkImport, setShowBulkImport] = useState(false);
   const [singleVideoDeckSearch, setSingleVideoDeckSearch] = useState('');
   const [showSingleVideoDeckDropdown, setShowSingleVideoDeckDropdown] = useState(false);
   const [metafyGuide, setMetafyGuide] = useState({
@@ -70,9 +69,7 @@ function App() {
 
   const [selectedSingleVideoDeck, setSelectedSingleVideoDeck] = useState(null);
   const [pendingResources, setPendingResources] = useState([]);
-  const [showReviewQueue, setShowReviewQueue] = useState(false);
   const [matchupResources, setMatchupResources] = useState([]);
-  const [showMatchupQueue, setShowMatchupQueue] = useState(false);
   const [selectedAuthor, setSelectedAuthor] = useState(null);
   const [currentView, setCurrentView] = useState('home'); // 'home', 'deck', 'admin', 'author'
   const [importResults, setImportResults] = useState(null);
@@ -123,12 +120,9 @@ function App() {
   });
   const [showOutOfDate, setShowOutOfDate] = useState(false);
 
-  // Fetch all decks and special resources on load
+  // Fetch all initial data in a single API call on load
   useEffect(() => {
-    fetchDecks();
-    fetchTierListResources();
-    fetchTournamentResources();
-    fetchPaidGuidesResources();
+    fetchInitialData();
   }, []);
 
   // Close deck dropdown when clicking outside
@@ -164,6 +158,25 @@ function App() {
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
+
+  const fetchInitialData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/initial-data');
+      const result = await response.json();
+
+      if (result.success) {
+        setDecks(result.data.decks);
+        setTierListResources(result.data.tierListResources);
+        setTournamentResources(result.data.tournamentResources);
+        setPaidGuides(result.data.paidGuides);
+      }
+    } catch (error) {
+      console.error('Error fetching initial data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchDecks = async () => {
     try {
