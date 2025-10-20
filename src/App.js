@@ -71,6 +71,7 @@ function App() {
   const [pendingResources, setPendingResources] = useState([]);
   const [showReviewQueue, setShowReviewQueue] = useState(false);
   const [matchupResources, setMatchupResources] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [showMatchupQueue, setShowMatchupQueue] = useState(false);
   const [selectedAuthor, setSelectedAuthor] = useState(null);
   const [currentView, setCurrentView] = useState('home'); // 'home', 'deck', 'admin', 'author'
@@ -193,6 +194,7 @@ function App() {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const fetchTierListResources = async () => {
     try {
       const response = await fetch('/api/resources?type=Tierlist');
@@ -209,6 +211,7 @@ function App() {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const fetchTournamentResources = async () => {
     try {
       const response = await fetch('/api/resources?type=Tournament%20Report');
