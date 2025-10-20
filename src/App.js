@@ -148,6 +148,23 @@ function App() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showDeckDropdown, showSearchDropdown, showMatchupDropdown]);
 
+  // Handle URL hash routing for admin login
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === '#/admin') {
+        setCurrentView('admin');
+      }
+    };
+
+    // Check hash on mount
+    handleHashChange();
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   const fetchDecks = async () => {
     try {
       setLoading(true);
@@ -825,6 +842,7 @@ function App() {
       sessionStorage.removeItem('adminToken');
       setIsAuthenticated(false);
       setCurrentView('home');
+      window.location.hash = ''; // Clear the hash
     }
   };
 
@@ -2534,7 +2552,7 @@ function App() {
     return (
       <div className="App">
         <header className="header">
-          <button onClick={() => setCurrentView('home')} className="back-btn">
+          <button onClick={() => { setCurrentView('home'); window.location.hash = ''; }} className="back-btn">
             ← Back to Home
           </button>
           <h1>🔐 Admin Login</h1>
