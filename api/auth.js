@@ -1,5 +1,5 @@
-// Simple admin authentication API
-// In production, this should use proper password hashing and JWT tokens
+// Admin authentication API with JWT
+const { generateToken } = require('../lib/authMiddleware');
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
@@ -28,13 +28,16 @@ module.exports = async function handler(req, res) {
 
     // Check password
     if (password === ADMIN_PASSWORD) {
-      // In production, this would return a JWT token
-      // For now, we'll use a simple session token
-      const token = Buffer.from(`admin:${Date.now()}`).toString('base64');
+      // Generate JWT token with 24 hour expiration
+      const token = generateToken({
+        role: 'admin',
+        loginTime: new Date().toISOString()
+      }, '24h');
 
       return res.status(200).json({
         success: true,
         token: token,
+        expiresIn: '24h',
         message: 'Authentication successful'
       });
     } else {
