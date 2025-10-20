@@ -95,7 +95,10 @@ function App() {
   const [selectedAuthorsForScan, setSelectedAuthorsForScan] = useState(new Set()); // Set of author IDs
 
   // Admin authentication
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Check sessionStorage for existing session on load
+    return sessionStorage.getItem('adminToken') !== null;
+  });
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
@@ -788,6 +791,40 @@ function App() {
       alert('Failed to scan channels');
     } finally {
       setScanningChannels(false);
+    }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoginError('');
+
+    try {
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: loginPassword })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        sessionStorage.setItem('adminToken', data.token);
+        setIsAuthenticated(true);
+        setLoginPassword('');
+        setCurrentView('admin');
+      } else {
+        setLoginError('Invalid password');
+      }
+    } catch (error) {
+      setLoginError('Login failed. Please try again.');
+    }
+  };
+
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to logout?')) {
+      sessionStorage.removeItem('adminToken');
+      setIsAuthenticated(false);
+      setCurrentView('home');
     }
   };
 
@@ -2490,15 +2527,98 @@ function App() {
     );
   }
 
-  // Render Admin Panel
-  if (currentView === 'admin') {
+  // Render Login Page
+  if (currentView === 'admin' && !isAuthenticated) {
     return (
       <div className="App">
         <header className="header">
           <button onClick={() => setCurrentView('home')} className="back-btn">
             ← Back to Home
           </button>
-          <h1>🎴 PokeVods - Admin Panel</h1>
+          <h1>🔐 Admin Login</h1>
+        </header>
+
+        <div style={{
+          maxWidth: '400px',
+          margin: '100px auto',
+          padding: '2rem',
+          border: '2px solid #007bff',
+          borderRadius: '8px',
+          backgroundColor: '#f8f9fa'
+        }}>
+          <form onSubmit={handleLogin}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                Password
+              </label>
+              <input
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  fontSize: '1rem',
+                  borderRadius: '4px',
+                  border: '2px solid #ddd'
+                }}
+                placeholder="Enter admin password"
+                autoFocus
+              />
+            </div>
+
+            {loginError && (
+              <div style={{
+                padding: '0.75rem',
+                marginBottom: '1rem',
+                backgroundColor: '#f8d7da',
+                color: '#721c24',
+                borderRadius: '4px',
+                border: '1px solid #f5c6cb'
+              }}>
+                {loginError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ width: '100%', padding: '0.75rem', fontSize: '1rem' }}
+            >
+              Login
+            </button>
+          </form>
+
+          <div style={{
+            marginTop: '1.5rem',
+            padding: '1rem',
+            backgroundColor: '#fff3cd',
+            borderRadius: '4px',
+            fontSize: '0.9rem'
+          }}>
+            <strong>Default Password:</strong> admin123
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render Admin Panel
+  if (currentView === 'admin') {
+    return (
+      <div className="App">
+        <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem' }}>
+          <button onClick={() => setCurrentView('home')} className="back-btn">
+            ← Back to Home
+          </button>
+          <h1 style={{ margin: 0, flex: 1, textAlign: 'center' }}>🎴 PokeVods - Admin Panel</h1>
+          <button
+            onClick={handleLogout}
+            className="btn btn-secondary"
+            style={{ padding: '0.5rem 1rem' }}
+          >
+            Logout
+          </button>
         </header>
 
         <div className="deck-detail" style={{ maxWidth: '1200px', margin: '0 auto' }}>
