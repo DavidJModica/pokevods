@@ -90,6 +90,9 @@ function App() {
   const [editingAuthor, setEditingAuthor] = useState({}); // { [authorId]: { name, youtube, metafy } }
   const [editResourceChapterDeckSearch, setEditResourceChapterDeckSearch] = useState({}); // { [chapterIndex]: deckSearch }
   const [showEditResourceChapterDeckDropdown, setShowEditResourceChapterDeckDropdown] = useState(null); // chapterIndex of dropdown showing
+  const [scanningChannels, setScanningChannels] = useState(false);
+  const [channelScanResults, setChannelScanResults] = useState(null);
+  const [selectedAuthorsForScan, setSelectedAuthorsForScan] = useState(new Set()); // Set of author IDs
 
   // Resource filters for deck page
   const [resourceTypeFilters, setResourceTypeFilters] = useState({
@@ -735,6 +738,51 @@ function App() {
       alert('Failed to import videos');
     } finally {
       setBulkImporting(false);
+    }
+  };
+
+  const handleScanAuthorChannels = async () => {
+    const selectedCount = selectedAuthorsForScan.size;
+
+    if (selectedCount === 0) {
+      alert('Please select at least one author to scan');
+      return;
+    }
+
+    if (!window.confirm(`Scan ${selectedCount} selected author${selectedCount > 1 ? 's' : ''} for new videos? This may take a few minutes.`)) {
+      return;
+    }
+
+    setScanningChannels(true);
+    setChannelScanResults(null);
+
+    try {
+      const response = await fetch('/api/scan-author-channels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          authorIds: Array.from(selectedAuthorsForScan)
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setChannelScanResults(data);
+        alert(`Channel scan complete!\n\nAuthors scanned: ${data.authorsScanned}\nNew videos found: ${data.newVideosFound}\nVideos added: ${data.videosAdded}\nVideos skipped: ${data.videosSkipped}\nErrors: ${data.errors.length}`);
+
+        // Refresh pending resources if new videos were added
+        if (data.videosAdded > 0) {
+          fetchPendingResources();
+        }
+      } else {
+        alert(`Error: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Channel scan error:', error);
+      alert('Failed to scan channels');
+    } finally {
+      setScanningChannels(false);
     }
   };
 
@@ -2996,6 +3044,169 @@ function App() {
                 >
                   💎 Add Metafy Guide
                 </button>
+              </div>
+
+              {/* Author Channel Scanner Section */}
+              <div style={{ marginBottom: '3rem', padding: '1.5rem', border: '2px solid #28a745', borderRadius: '8px', backgroundColor: '#f0fff4' }}>
+                <h2 style={{ marginTop: 0 }}>Scan Author YouTube Channels</h2>
+                <p style={{ color: '#666', marginBottom: '1.5rem' }}>
+                  Automatically scan selected authors' YouTube channels for new videos. Videos will be auto-approved if a deck is detected, otherwise sent to Review Queue.
+                </p>
+
+                {/* Select All / Deselect All */}
+                <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => {
+                      // Load authors if not already loaded
+                      if (authors.length === 0) {
+                        fetchAuthors();
+                      }
+                      const authorsWithYouTube = authors.filter(a => a.youtube);
+                      setSelectedAuthorsForScan(new Set(authorsWithYouTube.map(a => a.id)));
+                    }}
+                    className="btn btn-secondary"
+                    style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                  >
+                    ✅ Select All
+                  </button>
+                  <button
+                    onClick={() => setSelectedAuthorsForScan(new Set())}
+                    className="btn btn-secondary"
+                    style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                  >
+                    ❌ Deselect All
+                  </button>
+                  <span style={{ marginLeft: 'auto', padding: '0.5rem 1rem', color: '#666' }}>
+                    {selectedAuthorsForScan.size} selected
+                  </span>
+                </div>
+
+                {/* Author Checkboxes */}
+                <div style={{
+                  maxHeight: '400px',
+                  overflow: 'auto',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  padding: '1rem',
+                  backgroundColor: 'white',
+                  marginBottom: '1rem'
+                }}>
+                  {authors.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+                      <button onClick={fetchAuthors} className="btn btn-primary">Load Authors</button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '0.75rem' }}>
+                      {authors
+                        .filter(author => author.youtube)
+                        .map(author => (
+                          <label
+                            key={author.id}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              padding: '0.75rem',
+                              border: '1px solid #ddd',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              backgroundColor: selectedAuthorsForScan.has(author.id) ? '#e7f3ff' : 'white',
+                              transition: 'background-color 0.2s'
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedAuthorsForScan.has(author.id)}
+                              onChange={(e) => {
+                                const newSelected = new Set(selectedAuthorsForScan);
+                                if (e.target.checked) {
+                                  newSelected.add(author.id);
+                                } else {
+                                  newSelected.delete(author.id);
+                                }
+                                setSelectedAuthorsForScan(newSelected);
+                              }}
+                              style={{ marginRight: '0.75rem', cursor: 'pointer', width: '18px', height: '18px' }}
+                            />
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 'bold' }}>{author.name}</div>
+                              {author.youtube && (
+                                <div style={{ fontSize: '0.8rem', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {author.youtube}
+                                </div>
+                              )}
+                            </div>
+                          </label>
+                        ))}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleScanAuthorChannels}
+                  className="btn btn-primary"
+                  style={{ fontSize: '1.1rem', padding: '0.75rem 2rem' }}
+                  disabled={scanningChannels || selectedAuthorsForScan.size === 0}
+                >
+                  {scanningChannels ? '🔄 Scanning...' : `🔍 Scan ${selectedAuthorsForScan.size} Author${selectedAuthorsForScan.size !== 1 ? 's' : ''}`}
+                </button>
+
+                {/* Show scan results if available */}
+                {channelScanResults && (
+                  <div style={{ marginTop: '2rem', border: '1px solid #28a745', padding: '1.5rem', borderRadius: '8px', backgroundColor: 'white' }}>
+                    <h3>Scan Results</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                      <div style={{ padding: '1rem', backgroundColor: '#d4edda', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#155724' }}>
+                          {channelScanResults.authorsScanned}
+                        </div>
+                        <div style={{ color: '#155724' }}>Authors Scanned</div>
+                      </div>
+                      <div style={{ padding: '1rem', backgroundColor: '#d4edda', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#155724' }}>
+                          {channelScanResults.videosAdded}
+                        </div>
+                        <div style={{ color: '#155724' }}>Videos Added</div>
+                      </div>
+                      <div style={{ padding: '1rem', backgroundColor: '#fff3cd', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#856404' }}>
+                          {channelScanResults.videosSkipped}
+                        </div>
+                        <div style={{ color: '#856404' }}>Skipped</div>
+                      </div>
+                      <div style={{ padding: '1rem', backgroundColor: '#f8d7da', borderRadius: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#721c24' }}>
+                          {channelScanResults.errors.length}
+                        </div>
+                        <div style={{ color: '#721c24' }}>Errors</div>
+                      </div>
+                    </div>
+
+                    {/* Show per-author results */}
+                    {channelScanResults.authorResults && channelScanResults.authorResults.length > 0 && (
+                      <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+                        <h4>Details by Author:</h4>
+                        {channelScanResults.authorResults.map((result, idx) => (
+                          <div key={idx} style={{ padding: '0.75rem', marginBottom: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.9rem' }}>
+                            <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>{result.name}</div>
+                            <div style={{ color: '#666' }}>
+                              Found: {result.videosFound} | Added: {result.videosAdded} | Skipped: {result.videosSkipped}
+                              {result.error && <span style={{ color: '#dc3545' }}> | Error: {result.error}</span>}
+                            </div>
+                            {result.addedVideos && result.addedVideos.length > 0 && (
+                              <div style={{ marginTop: '0.5rem', paddingLeft: '1rem' }}>
+                                {result.addedVideos.map((video, vIdx) => (
+                                  <div key={vIdx} style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.25rem' }}>
+                                    • {video.title} ({video.deck}) - {video.status}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <h2>Bulk Import YouTube Videos</h2>
