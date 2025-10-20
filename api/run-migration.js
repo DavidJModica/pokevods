@@ -1,4 +1,4 @@
-const { sql } = require('@vercel/postgres');
+const prisma = require('../lib/prisma');
 
 module.exports = async function handler(req, res) {
   const { method } = req;
@@ -22,7 +22,7 @@ module.exports = async function handler(req, res) {
 
     // Step 1: Add lastScanDate column to Author table
     try {
-      await sql`ALTER TABLE "Author" ADD COLUMN IF NOT EXISTS "lastScanDate" TIMESTAMP(3)`;
+      await prisma.$executeRaw`ALTER TABLE "Author" ADD COLUMN IF NOT EXISTS "lastScanDate" TIMESTAMP(3)`;
       results.push('✅ Added lastScanDate column to Author table');
       console.log('✅ Added lastScanDate column');
     } catch (error) {
@@ -32,7 +32,7 @@ module.exports = async function handler(req, res) {
 
     // Step 2: Add lastVideoDate column to Author table
     try {
-      await sql`ALTER TABLE "Author" ADD COLUMN IF NOT EXISTS "lastVideoDate" TIMESTAMP(3)`;
+      await prisma.$executeRaw`ALTER TABLE "Author" ADD COLUMN IF NOT EXISTS "lastVideoDate" TIMESTAMP(3)`;
       results.push('✅ Added lastVideoDate column to Author table');
       console.log('✅ Added lastVideoDate column');
     } catch (error) {
@@ -42,7 +42,7 @@ module.exports = async function handler(req, res) {
 
     // Step 3: Create RejectedVideo table
     try {
-      await sql`
+      await prisma.$executeRawUnsafe(`
         CREATE TABLE IF NOT EXISTS "RejectedVideo" (
           "id" SERIAL NOT NULL,
           "url" TEXT NOT NULL,
@@ -51,7 +51,7 @@ module.exports = async function handler(req, res) {
           "rejectedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
           CONSTRAINT "RejectedVideo_pkey" PRIMARY KEY ("id")
         )
-      `;
+      `);
       results.push('✅ Created RejectedVideo table');
       console.log('✅ Created RejectedVideo table');
     } catch (error) {
@@ -61,7 +61,7 @@ module.exports = async function handler(req, res) {
 
     // Step 4: Create unique index on url
     try {
-      await sql`
+      await prisma.$executeRawUnsafe(`
         DO $$
         BEGIN
           IF NOT EXISTS (
@@ -72,7 +72,7 @@ module.exports = async function handler(req, res) {
           END IF;
         END
         $$
-      `;
+      `);
       results.push('✅ Created unique index on RejectedVideo.url');
       console.log('✅ Created unique index');
     } catch (error) {
