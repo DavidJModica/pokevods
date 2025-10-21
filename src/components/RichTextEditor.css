@@ -1,0 +1,143 @@
+.rich-text-editor {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+  margin-bottom: 1rem;
+}
+
+.editor-toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+  flex-wrap: wrap;
+}
+
+.editor-toolbar button {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.editor-toolbar button:hover:not(:disabled) {
+  background: #e0e0e0;
+  border-color: #999;
+}
+
+.editor-toolbar button.is-active {
+  background: #007bff;
+  color: white;
+  border-color: #0056b3;
+}
+
+.editor-toolbar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar-separator {
+  display: inline-block;
+  width: 1px;
+  height: 24px;
+  background: #ccc;
+  margin: 0 4px;
+  align-self: center;
+}
+
+.editor-content {
+  min-height: 200px;
+  padding: 16px;
+}
+
+/* TipTap Editor Styles */
+.editor-content .ProseMirror {
+  outline: none;
+  min-height: 200px;
+}
+
+.editor-content .ProseMirror p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.editor-content .ProseMirror h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+.editor-content .ProseMirror h3 {
+  font-size: 1.25em;
+  font-weight: bold;
+  margin-top: 0.8em;
+  margin-bottom: 0.4em;
+}
+
+.editor-content .ProseMirror p {
+  margin-bottom: 0.8em;
+}
+
+.editor-content .ProseMirror ul,
+.editor-content .ProseMirror ol {
+  padding-left: 1.5em;
+  margin-bottom: 0.8em;
+}
+
+.editor-content .ProseMirror li {
+  margin-bottom: 0.3em;
+}
+
+.editor-content .ProseMirror a {
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.editor-content .ProseMirror a:hover {
+  color: #0056b3;
+}
+
+.editor-content .ProseMirror img.guide-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1em auto;
+  border-radius: 4px;
+}
+
+.editor-content .ProseMirror strong {
+  font-weight: bold;
+}
+
+.editor-content .ProseMirror em {
+  font-style: italic;
+}
+
+.editor-content .ProseMirror code {
+  background: #f4f4f4;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.editor-content .ProseMirror pre {
+  background: #f4f4f4;
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.editor-content .ProseMirror pre code {
+  background: none;
+  padding: 0;
+}
