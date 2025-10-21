@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 import HostedGuidesAdmin from './components/HostedGuidesAdmin';
+import GuideEditorStandalone from './components/GuideEditorStandalone';
 
 // Format date for Mega Evolutions format (Sept 26, 2025)
 const MEGA_EVOLUTIONS_FORMAT_DATE = new Date('2025-09-26');
@@ -78,6 +79,8 @@ function App() {
   const [currentView, setCurrentView] = useState('home'); // 'home', 'deck', 'admin', 'author', 'guides', 'guide-view', 'guide-edit'
   const [selectedGuideSlug, setSelectedGuideSlug] = useState(null);
   const [selectedGuideId, setSelectedGuideId] = useState(null);
+  const [showGuideEditor, setShowGuideEditor] = useState(false);
+  const [editingGuideId, setEditingGuideId] = useState(null);
   const [importResults, setImportResults] = useState(null);
   const [adminTab, setAdminTab] = useState('bulkImport'); // 'bulkImport', 'reviewQueue', 'matchupQueue', 'manageGuides', 'manageAuthors', 'hostedGuides'
   const [editingDeck, setEditingDeck] = useState(null);
