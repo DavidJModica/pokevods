@@ -196,6 +196,7 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
                         className="win-rate-slider"
                       />
                     </div>
+                  </div>
 
                   {/* Matchup Notes */}
                   <div className="form-group">
