@@ -2,6 +2,7 @@
 const prisma = require('../lib/prisma');
 const bcrypt = require('bcryptjs');
 const { generateAuthorToken } = require('../lib/authorMiddleware');
+const { checkRateLimit, recordSuccessfulLogin } = require('../lib/rateLimiter');
 
 module.exports = async function handler(req, res) {
   const { method } = req;
