@@ -81,7 +81,7 @@ function App() {
   const [selectedGuideId, setSelectedGuideId] = useState(null);
   const [showGuideEditor, setShowGuideEditor] = useState(false);
   const [editingGuideId, setEditingGuideId] = useState(null);
-  const [importResults, setImportResults] = useState(null);
+  const [showGuideEditor, setShowGuideEditor] = useState(false);
   const [adminTab, setAdminTab] = useState('bulkImport'); // 'bulkImport', 'reviewQueue', 'matchupQueue', 'manageGuides', 'manageAuthors', 'hostedGuides'
   const [editingDeck, setEditingDeck] = useState(null);
   const [editingChapter, setEditingChapter] = useState(null);
@@ -4006,7 +4006,40 @@ function App() {
 
           {/* Hosted Guides Tab */}
           {adminTab === 'hostedGuides' && (
-            <HostedGuidesAdmin decks={decks} />
+            <>
+              {showGuideEditor ? (
+                <GuideEditorStandalone
+                  guideId={editingGuideId}
+                  decks={decks}
+                  onCancel={() => {
+                    setShowGuideEditor(false);
+                    setEditingGuideId(null);
+                  }}
+                  onSaveSuccess={(guide) => {
+                    setShowGuideEditor(false);
+                    setEditingGuideId(null);
+                    alert('Guide saved successfully!');
+                    // Optionally refresh guides list here
+                  }}
+                />
+              ) : (
+                <HostedGuidesAdmin
+                  decks={decks}
+                  onCreateGuide={() => {
+                    setEditingGuideId(null);
+                    setShowGuideEditor(true);
+                  }}
+                  onEditGuide={(guideId) => {
+                    setEditingGuideId(guideId);
+                    setShowGuideEditor(true);
+                  }}
+                  onViewGuide={(slug) => {
+                    // For now, just navigate to the guide URL
+                    window.open(`/guides/${slug}`, '_blank');
+                  }}
+                />
+              )}
+            </>
           )}
 
         </div>
