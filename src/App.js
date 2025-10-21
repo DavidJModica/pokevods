@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import './App.css';
+import HostedGuidesAdmin from './components/HostedGuidesAdmin';
+import GuideEditor from './components/GuideEditor';
+import GuideViewer from './components/GuideViewer';
+import GuidesList from './components/GuidesList';
 
 // Format date for Mega Evolutions format (Sept 26, 2025)
 const MEGA_EVOLUTIONS_FORMAT_DATE = new Date('2025-09-26');
@@ -74,9 +78,11 @@ function App() {
   // eslint-disable-next-line no-unused-vars
   const [showMatchupQueue, setShowMatchupQueue] = useState(false);
   const [selectedAuthor, setSelectedAuthor] = useState(null);
-  const [currentView, setCurrentView] = useState('home'); // 'home', 'deck', 'admin', 'author'
+  const [currentView, setCurrentView] = useState('home'); // 'home', 'deck', 'admin', 'author', 'guides', 'guide-view', 'guide-edit'
+  const [selectedGuideSlug, setSelectedGuideSlug] = useState(null);
+  const [selectedGuideId, setSelectedGuideId] = useState(null);
   const [importResults, setImportResults] = useState(null);
-  const [adminTab, setAdminTab] = useState('bulkImport'); // 'bulkImport', 'reviewQueue', 'matchupQueue', 'manageGuides', 'manageAuthors'
+  const [adminTab, setAdminTab] = useState('bulkImport'); // 'bulkImport', 'reviewQueue', 'matchupQueue', 'manageGuides', 'manageAuthors', 'hostedGuides'
   const [editingDeck, setEditingDeck] = useState(null);
   const [editingChapter, setEditingChapter] = useState(null);
   const [editChapterDeckSearch, setEditChapterDeckSearch] = useState('');
@@ -2766,6 +2772,21 @@ function App() {
             >
               👤 Manage Authors {authors.length > 0 && `(${authors.length})`}
             </button>
+            <button
+              onClick={() => setAdminTab('hostedGuides')}
+              style={{
+                padding: '1rem 2rem',
+                border: 'none',
+                background: adminTab === 'hostedGuides' ? '#007bff' : 'transparent',
+                color: adminTab === 'hostedGuides' ? 'white' : '#333',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                borderBottom: adminTab === 'hostedGuides' ? '3px solid #007bff' : 'none',
+                marginBottom: '-2px'
+              }}
+            >
+              📝 Hosted Guides
+            </button>
 
           </div>
 
@@ -3981,6 +4002,11 @@ function App() {
                 })
               )}
             </div>
+          )}
+
+          {/* Hosted Guides Tab */}
+          {adminTab === 'hostedGuides' && (
+            <HostedGuidesAdmin decks={decks} />
           )}
 
         </div>
