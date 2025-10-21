@@ -107,6 +107,20 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
 
   const getDeckIcons = (deck) => {
     if (!deck) return [];
+
+    // Try to parse icons from JSON field first (newer format)
+    if (deck.icons) {
+      try {
+        const parsed = typeof deck.icons === 'string' ? JSON.parse(deck.icons) : deck.icons;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.filter(icon => icon); // Filter out empty strings
+        }
+      } catch (e) {
+        console.error('Failed to parse deck icons:', e);
+      }
+    }
+
+    // Fallback to icon1/icon2 (legacy format)
     const icons = [];
     if (deck.icon1) icons.push(deck.icon1);
     if (deck.icon2) icons.push(deck.icon2);
