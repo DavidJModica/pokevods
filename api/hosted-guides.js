@@ -2,6 +2,7 @@
 const prisma = require('../lib/prisma');
 const { verifyToken } = require('../lib/authMiddleware');
 const { verifyAuthorOrAdmin } = require('../lib/authorMiddleware');
+const { sanitizeGuideContent, sanitizePlainText } = require('../lib/sanitize');
 
 // Helper to generate URL-friendly slug
 function generateSlug(title) {
@@ -208,8 +209,8 @@ module.exports = async function handler(req, res) {
                 create: sections.map(section => {
                   const sectionData = {
                     sectionType: section.type,
-                    title: section.title,
-                    content: section.content || '',
+                    title: sanitizePlainText(section.title),
+                    content: sanitizeGuideContent(section.content || ''),
                     order: section.order
                   };
 
@@ -305,8 +306,8 @@ module.exports = async function handler(req, res) {
                 create: sections.map(section => {
                   const sectionData = {
                     sectionType: section.type,
-                    title: section.title,
-                    content: section.content || '',
+                    title: sanitizePlainText(section.title),
+                    content: sanitizeGuideContent(section.content || '',
                     order: section.order
                   };
 
