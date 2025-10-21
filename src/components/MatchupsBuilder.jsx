@@ -105,6 +105,14 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
     return decks.find(d => d.id === parseInt(deckId));
   };
 
+  const getDeckIcons = (deck) => {
+    if (!deck) return [];
+    const icons = [];
+    if (deck.icon1) icons.push(deck.icon1);
+    if (deck.icon2) icons.push(deck.icon2);
+    return icons;
+  };
+
   const handleDeckSearch = (index, value) => {
     setDeckSearches({ ...deckSearches, [index]: value });
     setShowDropdowns({ ...showDropdowns, [index]: true });
@@ -237,9 +245,9 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
                               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
                             >
-                              {deck.icons && deck.icons.length > 0 && (
+                              {getDeckIcons(deck).length > 0 && (
                                 <div style={{ display: 'flex', gap: '4px' }}>
-                                  {deck.icons.map((icon, i) => (
+                                  {getDeckIcons(deck).map((icon, i) => (
                                     <img
                                       key={i}
                                       src={icon}
@@ -256,9 +264,9 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
                       )}
                     </div>
 
-                    {selectedDeck && selectedDeck.icons && (
+                    {selectedDeck && getDeckIcons(selectedDeck).length > 0 && (
                       <div className="deck-icons" style={{ marginTop: '8px', display: 'flex', gap: '4px' }}>
-                        {selectedDeck.icons.map((icon, i) => (
+                        {getDeckIcons(selectedDeck).map((icon, i) => (
                           <img
                             key={i}
                             src={icon}
