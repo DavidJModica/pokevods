@@ -5,6 +5,8 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
   const [decks, setDecks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [localMatchups, setLocalMatchups] = useState(matchups);
+  const [deckSearches, setDeckSearches] = useState({});
+  const [showDropdowns, setShowDropdowns] = useState({});
 
   useEffect(() => {
     fetchDecks();
@@ -42,6 +44,14 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
     const updated = localMatchups.filter((_, i) => i !== index);
     setLocalMatchups(updated);
     onChange(updated);
+
+    // Clean up search state for this matchup
+    const newSearches = { ...deckSearches };
+    const newDropdowns = { ...showDropdowns };
+    delete newSearches[index];
+    delete newDropdowns[index];
+    setDeckSearches(newSearches);
+    setShowDropdowns(newDropdowns);
   };
 
   const updateMatchup = (index, field, value) => {
@@ -95,6 +105,26 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
     return decks.find(d => d.id === parseInt(deckId));
   };
 
+  const handleDeckSearch = (index, value) => {
+    setDeckSearches({ ...deckSearches, [index]: value });
+    setShowDropdowns({ ...showDropdowns, [index]: true });
+  };
+
+  const selectDeck = (index, deck) => {
+    updateMatchup(index, 'opposingDeckId', deck.id);
+    setDeckSearches({ ...deckSearches, [index]: deck.name });
+    setShowDropdowns({ ...showDropdowns, [index]: false });
+  };
+
+  const getFilteredDecks = (searchQuery) => {
+    if (!searchQuery || searchQuery.trim() === '') {
+      return decks;
+    }
+    return decks.filter(deck =>
+      deck.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  };
+
   if (loading) {
     return <div className="matchups-loading">Loading decks...</div>;
   }
@@ -116,6 +146,8 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
         <div className="matchups-list">
           {localMatchups.map((matchup, index) => {
             const selectedDeck = getSelectedDeck(matchup.opposingDeckId);
+            const searchQuery = deckSearches[index] || (selectedDeck ? selectedDeck.name : '');
+            const filteredDecks = getFilteredDecks(searchQuery);
 
             return (
               <div key={index} className="matchup-card">
@@ -152,30 +184,87 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
                 </div>
 
                 <div className="matchup-body">
-                  {/* Opposing Deck Selection */}
+                  {/* Opposing Deck Selection with Search */}
                   <div className="form-group">
                     <label>Opposing Deck</label>
-                    <select
-                      value={matchup.opposingDeckId}
-                      onChange={(e) => updateMatchup(index, 'opposingDeckId', e.target.value)}
-                      className="deck-select"
-                      required
-                    >
-                      <option value="">Select a deck...</option>
-                      {decks.map(deck => (
-                        <option key={deck.id} value={deck.id}>
-                          {deck.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="deck-search-container" style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => handleDeckSearch(index, e.target.value)}
+                        onFocus={() => setShowDropdowns({ ...showDropdowns, [index]: true })}
+                        placeholder="Search for a deck..."
+                        className="deck-search-input"
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                          fontSize: '14px'
+                        }}
+                      />
+
+                      {showDropdowns[index] && filteredDecks.length > 0 && (
+                        <div
+                          className="deck-dropdown"
+                          style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            right: 0,
+                            backgroundColor: 'white',
+                            border: '1px solid #ddd',
+                            borderRadius: '4px',
+                            marginTop: '4px',
+                            maxHeight: '200px',
+                            overflowY: 'auto',
+                            zIndex: 1000,
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                          }}
+                        >
+                          {filteredDecks.map(deck => (
+                            <div
+                              key={deck.id}
+                              onClick={() => selectDeck(index, deck)}
+                              style={{
+                                padding: '8px 12px',
+                                cursor: 'pointer',
+                                borderBottom: '1px solid #f0f0f0',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                            >
+                              {deck.icons && deck.icons.length > 0 && (
+                                <div style={{ display: 'flex', gap: '4px' }}>
+                                  {deck.icons.map((icon, i) => (
+                                    <img
+                                      key={i}
+                                      src={icon}
+                                      alt=""
+                                      style={{ width: '20px', height: '20px' }}
+                                    />
+                                  ))}
+                                </div>
+                              )}
+                              <span>{deck.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     {selectedDeck && selectedDeck.icons && (
-                      <div className="deck-icons">
+                      <div className="deck-icons" style={{ marginTop: '8px', display: 'flex', gap: '4px' }}>
                         {selectedDeck.icons.map((icon, i) => (
                           <img
                             key={i}
                             src={icon}
                             alt=""
                             className="deck-icon"
+                            style={{ width: '24px', height: '24px' }}
                           />
                         ))}
                       </div>
