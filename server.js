@@ -8,6 +8,7 @@ const chaptersHandler = require('./api/chapters');
 const youtubeHandler = require('./api/youtube');
 const bulkImportHandler = require('./api/bulk-import');
 const authorsHandler = require('./api/authors');
+const { verifyToken } = require('./lib/authMiddleware');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -16,17 +17,39 @@ const PORT = process.env.PORT || 3002;
 app.use(cors());
 app.use(express.json());
 
-// API Routes - wrap handlers properly
-app.all('/api/decks', async (req, res) => {
-  try {
-    await decksHandler(req, res);
-  } catch (error) {
-    console.error('Decks API error:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Internal server error', details: error.message });
+// Helper: Protect POST/PUT/DELETE methods with authentication
+function protectMutatingMethods(handler) {
+  return async (req, res) => {
+    const mutatingMethods = ['POST', 'PUT', 'DELETE', 'PATCH'];
+
+    if (mutatingMethods.includes(req.method)) {
+      // Require authentication for data-changing operations
+      return verifyToken(req, res, async () => {
+        try {
+          await handler(req, res);
+        } catch (error) {
+          console.error('Protected endpoint error:', error);
+          if (!res.headersSent) {
+            res.status(500).json({ error: 'Internal server error' });
+          }
+        }
+      });
     }
-  }
-});
+
+    // Allow GET/OPTIONS without authentication
+    try {
+      await handler(req, res);
+    } catch (error) {
+      console.error('Public endpoint error:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    }
+  };
+}
+
+// API Routes - protect mutating methods with authentication
+app.all('/api/decks', protectMutatingMethods(decksHandler));
 
 app.get('/api/resources/matchup-queue', async (req, res) => {
   try {
@@ -95,60 +118,15 @@ app.get('/api/resources/matchup-queue', async (req, res) => {
   }
 });
 
-app.all('/api/resources', async (req, res) => {
-  try {
-    await resourcesHandler(req, res);
-  } catch (error) {
-    console.error('Resources API error:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Internal server error', details: error.message });
-    }
-  }
-});
+app.all('/api/resources', protectMutatingMethods(resourcesHandler));
 
-app.all('/api/chapters', async (req, res) => {
-  try {
-    await chaptersHandler(req, res);
-  } catch (error) {
-    console.error('Chapters API error:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Internal server error', details: error.message });
-    }
-  }
-});
+app.all('/api/chapters', protectMutatingMethods(chaptersHandler));
 
-app.all('/api/youtube', async (req, res) => {
-  try {
-    await youtubeHandler(req, res);
-  } catch (error) {
-    console.error('YouTube API error:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Internal server error', details: error.message });
-    }
-  }
-});
+app.all('/api/youtube', protectMutatingMethods(youtubeHandler));
 
-app.all('/api/bulk-import', async (req, res) => {
-  try {
-    await bulkImportHandler(req, res);
-  } catch (error) {
-    console.error('Bulk import API error:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Internal server error', details: error.message });
-    }
-  }
-});
+app.all('/api/bulk-import', protectMutatingMethods(bulkImportHandler));
 
-app.all('/api/authors', async (req, res) => {
-  try {
-    await authorsHandler(req, res);
-  } catch (error) {
-    console.error('Authors API error:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Internal server error', details: error.message });
-    }
-  }
-});
+app.all('/api/authors', protectMutatingMethods(authorsHandler));
 
 // Health check
 app.get('/health', (req, res) => {

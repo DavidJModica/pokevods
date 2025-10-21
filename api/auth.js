@@ -1,7 +1,15 @@
 // Admin authentication API with JWT
 const { generateToken } = require('../lib/authMiddleware');
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+if (!ADMIN_PASSWORD) {
+  throw new Error(
+    'CRITICAL SECURITY ERROR: ADMIN_PASSWORD environment variable is not set.\n' +
+    'This is required for admin authentication.\n' +
+    'Set a strong password (minimum 12 characters) in your .env file before starting the server.'
+  );
+}
 
 module.exports = async function handler(req, res) {
   const { method } = req;
