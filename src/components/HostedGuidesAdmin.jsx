@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './HostedGuidesAdmin.css';
 
-const HostedGuidesAdmin = ({ decks }) => {
+const HostedGuidesAdmin = ({ decks, onCreateGuide, onEditGuide, onViewGuide }) => {
   const [hostedGuides, setHostedGuides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // 'all', 'published', 'draft'
@@ -134,15 +134,21 @@ const HostedGuidesAdmin = ({ decks }) => {
   };
 
   const createNewGuide = () => {
-    window.open('/guides/create', '_blank');
+    if (onCreateGuide) {
+      onCreateGuide();
+    }
   };
 
   const editGuide = (guideId) => {
-    window.open(`/guides/edit/${guideId}`, '_blank');
+    if (onEditGuide) {
+      onEditGuide(guideId);
+    }
   };
 
   const viewGuide = (slug) => {
-    window.open(`/guides/${slug}`, '_blank');
+    if (onViewGuide) {
+      onViewGuide(slug);
+    }
   };
 
   const filteredGuides = hostedGuides.filter(guide => {
