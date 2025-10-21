@@ -81,6 +81,7 @@ function App() {
   const [selectedGuideId, setSelectedGuideId] = useState(null);
   const [showGuideEditor, setShowGuideEditor] = useState(false);
   const [editingGuideId, setEditingGuideId] = useState(null);
+  const [importResults, setImportResults] = useState(null);
   const [adminTab, setAdminTab] = useState('bulkImport'); // 'bulkImport', 'reviewQueue', 'matchupQueue', 'manageGuides', 'manageAuthors', 'hostedGuides'
   const [editingDeck, setEditingDeck] = useState(null);
   const [editingChapter, setEditingChapter] = useState(null);
