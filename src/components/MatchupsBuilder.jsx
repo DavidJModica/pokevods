@@ -30,7 +30,6 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
     const newMatchup = {
       opposingDeckId: '',
       winPercentage: 50,
-      difficulty: 'Even',
       notes: '',
       keyCards: []
     };
@@ -96,17 +95,6 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
     return decks.find(d => d.id === parseInt(deckId));
   };
 
-  const getDifficultyColor = (difficulty) => {
-    switch (difficulty) {
-      case 'Favored': return '#22c55e';
-      case 'Even': return '#eab308';
-      case 'Unfavored': return '#f97316';
-      case 'Very Unfavored': return '#ef4444';
-      default: return '#6b7280';
-    }
-  };
-
-  if (loading) {
     return <div className="matchups-loading">Loading decks...</div>;
   }
 
@@ -193,7 +181,7 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
                     )}
                   </div>
 
-                  {/* Win Percentage */
+                  {/* Win Percentage */}
                   <div className="matchup-stats">
                     <div className="form-group">
                       <label>Win Rate: {matchup.winPercentage}%</label>
@@ -208,21 +196,6 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
                       />
                     </div>
 
-                    <div className="form-group">
-                      <label>Difficulty</label>
-                      <select
-                        value={matchup.difficulty}
-                        onChange={(e) => updateMatchup(index, 'difficulty', e.target.value)}
-                        className="difficulty-select"
-                        style={{ borderLeft: `4px solid ${getDifficultyColor(matchup.difficulty)}` }}
-                      >
-                        <option value="Favored">Favored</option>
-                        <option value="Even">Even</option>
-                        <option value="Unfavored">Unfavored</option>
-                        <option value="Very Unfavored">Very Unfavored</option>
-                      </select>
-                    </div>
-                  </div>
 
                   {/* Matchup Notes */}
                   <div className="form-group">
