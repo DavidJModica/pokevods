@@ -208,7 +208,7 @@ const GuideEditorStandalone = ({ guideId, decks, onCancel, onSaveSuccess }) => {
       return;
     }
 
-    if (!confirm('Are you sure you want to publish this guide? It will be visible to all users.')) {
+    if (!window.confirm('Are you sure you want to publish this guide? It will be visible to all users.')) {
       return;
     }
 
@@ -277,7 +277,7 @@ const GuideEditorStandalone = ({ guideId, decks, onCancel, onSaveSuccess }) => {
       }
 
       if (section.type === 'matchups' && section.matchups.length === 0) {
-        const proceed = confirm(`Matchups section "${section.title}" has no matchups. Continue anyway?`);
+        const proceed = window.confirm(`Matchups section "${section.title}" has no matchups. Continue anyway?`);
         if (!proceed) {
           setActiveTab(i);
           return false;
