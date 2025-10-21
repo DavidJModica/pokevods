@@ -95,6 +95,7 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
     return decks.find(d => d.id === parseInt(deckId));
   };
 
+  if (loading) {
     return <div className="matchups-loading">Loading decks...</div>;
   }
 
@@ -195,7 +196,6 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
                         className="win-rate-slider"
                       />
                     </div>
-
 
                   {/* Matchup Notes */}
                   <div className="form-group">
