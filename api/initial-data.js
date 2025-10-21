@@ -12,9 +12,15 @@ module.exports = async function handler(req, res) {
   try {
     // Fetch all initial data in parallel for better performance
     const [decks, tierListResources, tournamentResources, paidGuides] = await Promise.all([
-      // Fetch all decks (not hidden)
+      // Fetch all decks (not hidden) with resources count
       prisma.deck.findMany({
         where: { hidden: false },
+        include: {
+          resources: {
+            where: { status: 'approved' },
+            select: { id: true } // Only select ID to keep response small
+          }
+        },
         orderBy: { name: 'asc' }
       }),
 
