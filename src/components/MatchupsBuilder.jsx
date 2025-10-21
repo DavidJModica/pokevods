@@ -193,7 +193,7 @@ const MatchupsBuilder = ({ matchups = [], onChange }) => {
                     )}
                   </div>
 
-                  {/* Win Percentage and Difficulty */}
+                  {/* Win Percentage */
                   <div className="matchup-stats">
                     <div className="form-group">
                       <label>Win Rate: {matchup.winPercentage}%</label>

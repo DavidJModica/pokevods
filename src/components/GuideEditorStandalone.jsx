@@ -29,6 +29,34 @@ const GuideEditorStandalone = ({ guideId, decks, onCancel, onSaveSuccess }) => {
         content: '',
         order: 1,
         matchups: []
+      },
+      {
+        type: 'decklist',
+        title: 'Decklist',
+        content: '',
+        order: 2,
+        matchups: []
+      },
+      {
+        type: 'card_explanations',
+        title: 'Card Explanations',
+        content: '',
+        order: 3,
+        matchups: []
+      },
+      {
+        type: 'notable_exclusions',
+        title: 'Notable Exclusions',
+        content: '',
+        order: 4,
+        matchups: []
+      },
+      {
+        type: 'matchups',
+        title: 'Matchups',
+        content: '',
+        order: 5,
+        matchups: []
       }
     ]
   });
