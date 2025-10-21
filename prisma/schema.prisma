@@ -26,12 +26,15 @@ model Deck {
 
   resources   Resource[]
   matchupChapters Chapter[] @relation("OpposingDeck")
+  matchups    Matchup[]  @relation("MatchupOpponent")
 }
 
 model Author {
   id             Int       @id @default(autoincrement())
   name           String    @unique
   slug           String    @unique // URL-friendly version of name
+  email          String?   @unique // For author login
+  password       String?   // Hashed password (bcrypt)
   bio            String?
   profilePicture String?   // URL to profile picture
   youtube        String?
@@ -42,6 +45,8 @@ model Author {
   metafy         String?   // Metafy profile URL
   lastScanDate   DateTime? // Last time channel was scanned for new videos
   lastVideoDate  DateTime? // Publication date of most recent video found
+  canCreateGuides Boolean  @default(false) // Grant guide creation permission
+  isVerified      Boolean  @default(false) // Email verified
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -53,31 +58,42 @@ model Resource {
   deckId          Int?
   deck            Deck?    @relation(fields: [deckId], references: [id], onDelete: Cascade)
 
-  type            String   // "Guide", "Gameplay", or "Guide and Gameplay"
+  type            String   // "Guide", "Gameplay", "Guide and Gameplay", "Hosted Guide"
   title           String
-  url             String
+  url             String?  // Nullable - hosted guides don't need external URL
   author          String?  // Legacy text field
   authorId        Int?
   authorProfile   Author?  @relation(fields: [authorId], references: [id])
-  platform        String?  // "YouTube", "Metafy", "Reddit", "Other"
+  platform        String?  // "YouTube", "Metafy", "Reddit", "PokeVods Hosted", "Other"
   accessType      String   @default("Free") // "Free" or "Paid"
   publicationDate DateTime?
   thumbnail       String?  // YouTube thumbnail URL
   decklist        String?  // Optional decklist text
   status          String   @default("approved") // "pending" or "approved"
 
+  // Hosted Guide Fields
+  isHosted        Boolean  @default(false)
+  slug            String?  @unique
+  publishStatus   String   @default("draft") // "draft" or "published"
+  views           Int      @default(0)
+  lastEditedBy    Int?
+
   chapters        Chapter[]
+  guideSections   GuideSection[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  @@index([deckId, publicationDate]) // For fetching deck resources sorted by date
-  @@index([authorId, publicationDate]) // For fetching author resources sorted by date
-  @@index([status]) // For filtering pending/approved resources
-  @@index([type]) // For filtering by resource type
-  @@index([platform]) // For filtering by platform
-  @@index([publicationDate]) // For date-based queries
-  @@index([url]) // For checking if video already exists
+  @@index([deckId, publicationDate])
+  @@index([authorId, publicationDate])
+  @@index([status])
+  @@index([type])
+  @@index([platform])
+  @@index([publicationDate])
+  @@index([url])
+  @@index([isHosted])
+  @@index([slug])
+  @@index([publishStatus])
 }
 
 model Chapter {
@@ -105,4 +121,62 @@ model RejectedVideo {
   title           String?  // Title when it was rejected
   reason          String?  // Why it was rejected (optional)
   rejectedAt      DateTime @default(now())
+}
+
+model GuideSection {
+  id              Int      @id @default(autoincrement())
+  resourceId      Int
+  resource        Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  sectionType     String   // "intro", "decklist", "card-explanations", "possible-inclusions", "notable-exclusions", "matchups", "custom"
+  title           String
+  content         String?  // Rich text content (HTML from TipTap)
+  order           Int
+
+  images          GuideImage[]
+  matchups        Matchup[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([resourceId, order])
+  @@index([sectionType])
+}
+
+model GuideImage {
+  id              Int          @id @default(autoincrement())
+  sectionId       Int
+  section         GuideSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  url             String       // Vercel Blob URL
+  altText         String?
+  caption         String?
+  width           Int?
+  height          Int?
+  order           Int
+
+  createdAt       DateTime     @default(now())
+
+  @@index([sectionId, order])
+}
+
+model Matchup {
+  id              Int          @id @default(autoincrement())
+  sectionId       Int
+  section         GuideSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  opposingDeckId  Int
+  opposingDeck    Deck         @relation("MatchupOpponent", fields: [opposingDeckId], references: [id])
+
+  winPercentage   Float?
+  difficulty      String?      // "Favored", "Even", "Unfavored", "Very Unfavored"
+  notes           String?      // Matchup strategy notes
+  keyCards        Json?        // [{cardName, importance, notes}]
+
+  order           Int
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([sectionId, order])
+  @@index([opposingDeckId])
 }
