@@ -60,7 +60,7 @@ module.exports = async (req, res) => {
           orderBy: { timestamp: 'asc' }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { publicationDate: 'desc' }
     });
 
     console.log(`✅ Matchup queue query returned ${resources.length} resources`);

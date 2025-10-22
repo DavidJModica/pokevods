@@ -1,7 +1,7 @@
 require('dotenv').config({ path: '.env.production' });
 const prisma = require('../lib/prisma');
 
-const MEGA_EVOLUTIONS_FORMAT_DATE = new Date('2025-09-26');
+const MEGA_EVOLUTIONS_FORMAT_DATE = new Date('2025-09-25');
 
 async function cleanupOldMatchupQueue() {
   console.log('🔍 Scanning Matchup Queue for old videos...\n');
