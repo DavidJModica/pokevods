@@ -21,12 +21,15 @@ model Deck {
   icon        String?   // Path to deck icon image (deprecated - use icons)
   icons       String?   // JSON array of icon paths
   hidden      Boolean   @default(false) // Hide deck from main view
+  variantOf   String?   // Parent deck name for variants (e.g., "Charizard" for "Charizard Pidgeot")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   resources   Resource[]
   matchupChapters Chapter[] @relation("OpposingDeck")
   matchups    Matchup[]  @relation("MatchupOpponent")
+
+  @@index([variantOf]) // For finding all variants of a deck
 }
 
 model Author {

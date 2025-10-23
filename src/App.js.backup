@@ -116,7 +116,6 @@ function App() {
     'Discussion': true,
     'Tournament Report': true,
     'Tierlist': true,
-    'Fundamentals': true,
     'Metagame Discussion': true
   });
   const [accessTypeFilters, setAccessTypeFilters] = useState({
@@ -1306,11 +1305,10 @@ function App() {
                     <option value="Discussion">Discussion</option>
                     <option value="Tournament Report">Tournament Report</option>
                     <option value="Tierlist">Tierlist</option>
-                    <option value="Fundamentals">Fundamentals</option>
                     <option value="Metagame Discussion">Metagame Discussion</option>
                   </select>
                 </div>
-                {(editingResource.type === 'Tierlist' || editingResource.type === 'Metagame Discussion' || editingResource.type === 'Fundamentals') && (
+                {(editingResource.type === 'Tierlist' || editingResource.type === 'Metagame Discussion') && (
                   <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
                     Note: Deck selection is optional for {editingResource.type} resources.
                   </div>
@@ -1723,7 +1721,6 @@ function App() {
                     <option value="Discussion">Discussion</option>
                     <option value="Tournament Report">Tournament Report</option>
                     <option value="Tierlist">Tierlist</option>
-                    <option value="Fundamentals">Fundamentals</option>
                     <option value="Metagame Discussion">Metagame Discussion</option>
                   </select>
                   <select
@@ -2270,7 +2267,7 @@ function App() {
                                 ))}
                               </select>
                             </div>
-                            {(editingResource.type === 'Tierlist' || editingResource.type === 'Metagame Discussion' || editingResource.type === 'Fundamentals') && (
+                            {(editingResource.type === 'Tierlist' || editingResource.type === 'Metagame Discussion') && (
                               <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
                                 Note: Deck selection is optional for {editingResource.type} resources.
                               </div>
@@ -4124,11 +4121,10 @@ function App() {
                     <option value="Discussion">Discussion</option>
                     <option value="Tournament Report">Tournament Report</option>
                     <option value="Tierlist">Tierlist</option>
-                    <option value="Fundamentals">Fundamentals</option>
                     <option value="Metagame Discussion">Metagame Discussion</option>
                   </select>
                 </div>
-                {(editingResource.type === 'Tierlist' || editingResource.type === 'Metagame Discussion' || editingResource.type === 'Fundamentals') && (
+                {(editingResource.type === 'Tierlist' || editingResource.type === 'Metagame Discussion') && (
                   <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
                     Note: Deck selection is optional for {editingResource.type} resources.
                   </div>
@@ -4575,6 +4571,40 @@ function App() {
               >
                 <div className="deck-list-info">
                   <span className="deck-list-name">{resource.title}</span>
+                  <span className="deck-list-meta">
+                    {resource.authorProfile?.name || resource.author}
+                    {resource.publicationDate && ` • ${new Date(resource.publicationDate).toLocaleDateString()}`}
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tournament VODs Section */}
+      {tournamentResources.length > 0 && (
+        <div className="decks-container" style={{ marginBottom: '2rem' }}>
+          <h2 style={{ marginBottom: '1rem' }}>🏆 Tournament VODs</h2>
+          <div className="decks-list">
+            {tournamentResources.map(resource => (
+              <a
+                key={resource.id}
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="deck-list-item"
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
+                <div className="deck-list-info">
+                  <span className="deck-list-name">
+                    {resource.deck?.name && (
+                      <span style={{ color: '#28a745', fontWeight: 'bold', marginRight: '0.5rem' }}>
+                        {resource.deck.name}
+                      </span>
+                    )}
+                    {resource.title}
+                  </span>
                   <span className="deck-list-meta">
                     {resource.authorProfile?.name || resource.author}
                     {resource.publicationDate && ` • ${new Date(resource.publicationDate).toLocaleDateString()}`}
