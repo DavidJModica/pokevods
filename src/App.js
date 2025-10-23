@@ -48,6 +48,7 @@ function App() {
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [matchupFilter, setMatchupFilter] = useState(null);
   const [matchupSearch, setMatchupSearch] = useState('');
+  const [relatedDeckIds, setRelatedDeckIds] = useState([]);
   const [showMatchupDropdown, setShowMatchupDropdown] = useState(false);
   const [editingResource, setEditingResource] = useState(null);
   const [editDeckSearch, setEditDeckSearch] = useState('');
@@ -1645,6 +1646,7 @@ function App() {
                     setShowMatchupDropdown(true);
                     if (!e.target.value) {
                       setMatchupFilter(null);
+                      setRelatedDeckIds([]);
                     }
                   }}
                   onFocus={() => setShowMatchupDropdown(true)}
@@ -1655,6 +1657,7 @@ function App() {
                     onClick={() => {
                       setMatchupFilter(null);
                       setMatchupSearch('');
+                      setRelatedDeckIds([]);
                     }}
                     style={{
                       position: 'absolute',
@@ -1684,10 +1687,21 @@ function App() {
                           <div
                             key={deck.id}
                             className="deck-search-item"
-                            onClick={() => {
+                            onClick={async () => {
                               setMatchupFilter(deck.id);
                               setMatchupSearch(deck.name);
                               setShowMatchupDropdown(false);
+
+                              // Fetch all related deck IDs (including variants)
+                              try {
+                                const response = await fetch(`/api/decks/${deck.id}/matchups`);
+                                const data = await response.json();
+                                const allDeckIds = data.relatedDecks?.map(d => d.id) || [deck.id];
+                                setRelatedDeckIds(allDeckIds);
+                              } catch (error) {
+                                console.error('Error fetching related decks:', error);
+                                setRelatedDeckIds([deck.id]);
+                              }
                             }}
                           >
                             <div className="deck-icons-group">
@@ -1919,8 +1933,10 @@ function App() {
                   ?.filter(resource => {
                     // Filter by matchup if a matchup is selected
                     if (!matchupFilter) return true;
+                    // Use relatedDeckIds to include variants
+                    const deckIdsToCheck = relatedDeckIds.length > 0 ? relatedDeckIds : [matchupFilter];
                     return resource.chapters?.some(chapter =>
-                      chapter.chapterType === 'Matchup' && chapter.opposingDeckId === matchupFilter
+                      chapter.chapterType === 'Matchup' && deckIdsToCheck.includes(chapter.opposingDeckId)
                     );
                   })
                   .filter(resource => {
