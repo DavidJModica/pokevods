@@ -2714,7 +2714,7 @@ function App() {
           <button onClick={() => setCurrentView('home')} className="back-btn">
             ← Back to Home
           </button>
-          <h1 style={{ margin: 0, flex: 1, textAlign: 'center' }}>🎴 PokeVods - Admin Panel v0.1.2</h1>
+          <h1 style={{ margin: 0, flex: 1, textAlign: 'center' }}>🎴 PokeVods - Admin Panel v0.1.3</h1>
           <button
             onClick={handleLogout}
             className="btn btn-secondary"
@@ -4492,7 +4492,7 @@ function App() {
       {adminTab === 'manageResources' && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h2 style={{ margin: 0 }}>Manage All Resources ({allResources.length})</h2>
+            <h2 style={{ margin: 0 }}>Manage All Resources ({allResources.length}) - Renders: {renderCount}</h2>
             <button
               onClick={() => {
                 setAllResources([]);
