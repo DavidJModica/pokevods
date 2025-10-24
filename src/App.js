@@ -83,7 +83,7 @@ function App() {
   const [showGuideEditor, setShowGuideEditor] = useState(false);
   const [editingGuideId, setEditingGuideId] = useState(null);
   const [importResults, setImportResults] = useState(null);
-  const [adminTab, setAdminTab] = useState('bulkImport'); // 'bulkImport', 'reviewQueue', 'matchupQueue', 'manageGuides', 'manageAuthors', 'hostedGuides'
+  const [adminTab, setAdminTab] = useState('bulkImport'); // 'bulkImport', 'reviewQueue', 'matchupQueue', 'manageGuides', 'manageAuthors', 'manageResources', 'hostedGuides'
   const [editingDeck, setEditingDeck] = useState(null);
   const [editingChapter, setEditingChapter] = useState(null);
   const [editChapterDeckSearch, setEditChapterDeckSearch] = useState('');
@@ -93,6 +93,7 @@ function App() {
   const [tierListResources, setTierListResources] = useState([]);
   const [tournamentResources, setTournamentResources] = useState([]);
   const [paidGuides, setPaidGuides] = useState([]);
+  const [allResources, setAllResources] = useState([]);
   const [authors, setAuthors] = useState([]);
   const [editingAuthor, setEditingAuthor] = useState({}); // { [authorId]: { name, youtube, metafy } }
   const [editResourceChapterDeckSearch, setEditResourceChapterDeckSearch] = useState({}); // { [chapterIndex]: deckSearch }
@@ -272,6 +273,22 @@ function App() {
       setAuthors(data);
     } catch (error) {
       console.error('Error fetching authors:', error);
+    }
+  };
+
+  const fetchAllResources = async () => {
+    try {
+      const response = await fetch('/api/resources');
+      const data = await response.json();
+      // Sort by createdAt, newest first
+      const sorted = data.sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        return dateB - dateA;
+      });
+      setAllResources(sorted);
+    } catch (error) {
+      console.error('Error fetching all resources:', error);
     }
   };
 
@@ -2790,6 +2807,24 @@ function App() {
               }}
             >
               👤 Manage Authors {authors.length > 0 && `(${authors.length})`}
+            </button>
+            <button
+              onClick={() => {
+                setAdminTab('manageResources');
+                fetchAllResources();
+              }}
+              style={{
+                padding: '1rem 2rem',
+                border: 'none',
+                background: adminTab === 'manageResources' ? '#007bff' : 'transparent',
+                color: adminTab === 'manageResources' ? 'white' : '#333',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                borderBottom: adminTab === 'manageResources' ? '3px solid #007bff' : 'none',
+                marginBottom: '-2px'
+              }}
+            >
+              📚 Manage Resources {allResources.length > 0 && `(${allResources.length})`}
             </button>
             <button
               onClick={() => setAdminTab('hostedGuides')}
