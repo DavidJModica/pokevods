@@ -93,7 +93,7 @@ function App() {
   const [tierListResources, setTierListResources] = useState([]);
   const [tournamentResources, setTournamentResources] = useState([]);
   const [paidGuides, setPaidGuides] = useState([]);
-  const [allResources, setAllResources] = useState([]);
+  const [manageVideosResources, setAllResources] = useState([]);
   const [renderCount, setRenderCount] = useState(0);
   const [authors, setAuthors] = useState([]);
   const [editingAuthor, setEditingAuthor] = useState({}); // { [authorId]: { name, youtube, metafy } }
@@ -277,7 +277,7 @@ function App() {
     }
   };
 
-  const fetchAllResources = async () => {
+  const fetchManageVideosResources = async () => {
     try {
       const response = await fetch('/api/resources');
       const data = await response.json();
@@ -296,8 +296,8 @@ function App() {
 
   // Auto-fetch resources when Manage Videos tab becomes active
   useEffect(() => {
-    if (adminTab === 'manageVideos' && allResources.length === 0) {
-      fetchAllResources();
+    if (adminTab === 'manageVideos' && manageVideosResources.length === 0) {
+      fetchManageVideosResources();
     }
   }, [adminTab]);
 
@@ -2714,7 +2714,7 @@ function App() {
           <button onClick={() => setCurrentView('home')} className="back-btn">
             ← Back to Home
           </button>
-          <h1 style={{ margin: 0, flex: 1, textAlign: 'center' }}>🎴 PokeVods - Admin Panel v0.1.7</h1>
+          <h1 style={{ margin: 0, flex: 1, textAlign: 'center' }}>🎴 PokeVods - Admin Panel v0.1.8</h1>
           <button
             onClick={handleLogout}
             className="btn btn-secondary"
@@ -2821,7 +2821,7 @@ function App() {
               onClick={() => {
                 setAllResources([]);  // Clear first to trigger re-render
                 setAdminTab('manageVideos');
-                fetchAllResources();
+                fetchManageVideosResources();
               }}
               style={{
                 padding: '1rem 2rem',
@@ -2834,7 +2834,7 @@ function App() {
                 marginBottom: '-2px'
               }}
             >
-              📚 Manage Videos {allResources.length > 0 && `(${allResources.length})`}
+              📚 Manage Videos {manageVideosResources.length > 0 && `(${manageVideosResources.length})`}
             </button>
             <button
               onClick={() => setAdminTab('hostedGuides')}
@@ -4476,15 +4476,15 @@ function App() {
       {/* Manage Videos Tab */}
           {adminTab === 'manageVideos' && (
             <div>
-              <h2>Manage Videos ({allResources.length})</h2>
+              <h2>Manage Videos ({manageVideosResources.length})</h2>
               <p style={{ color: '#666', marginBottom: '1.5rem' }}>
                 View and edit all resources sorted by newest first
               </p>
 
-              {allResources.length === 0 ? (
+              {manageVideosResources.length === 0 ? (
                 <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No matchups need review!</p>
               ) : (
-                allResources.map((resource, index) => {
+                manageVideosResources.map((resource, index) => {
                   return (
                     <div key={resource.id} style={{ border: '1px solid #ddd', padding: '1.5rem', marginBottom: '1rem', borderRadius: '8px', backgroundColor: index % 2 === 0 ? '#f9f9f9' : 'white' }}>
                       <div style={{ marginBottom: '1rem' }}>
