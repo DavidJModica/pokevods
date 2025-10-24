@@ -5,3 +5,4 @@ prisma/dev.db-journal
 *.db
 *.db-journal
 .env
+# Trigger redeploy for ADMIN_PASSWORD_HASH env var
