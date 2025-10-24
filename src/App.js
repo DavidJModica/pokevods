@@ -3680,8 +3680,6 @@ function App() {
                         <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
                             <strong>Author:</strong> {resource.authorProfile?.name || resource.author || 'Unknown'} | <strong>Platform:</strong> {resource.platform || 'Unknown'}
                           </div>
-                          </div>
-                        )}
                       </div>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button
@@ -3692,7 +3690,7 @@ function App() {
                             setShowEditDeckDropdown(false);
                           }}
                         >
-                          '✏️ Edit'
+                          ✏️ Edit
                         </button>
                         <button
                           className="btn btn-secondary"
