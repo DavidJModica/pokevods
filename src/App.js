@@ -297,14 +297,6 @@ function App() {
     }
   };
 
-  // Auto-fetch resources when Guide Videos tab becomes active
-  useEffect(() => {
-    if (adminTab === 'guideVideos' && guideVideosResources.length === 0) {
-      fetchGuideVideosResources();
-    }
-  }, [adminTab, guideVideosResources.length]);
-
-
   const fetchDeckById = async (id) => {
     try {
       const response = await fetch(`/api/decks?id=${id}`);
