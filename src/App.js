@@ -2822,7 +2822,6 @@ function App() {
             </button>
             <button
               onClick={() => {
-                setGuideVideosResources([]);  // Clear first to trigger re-render
                 setAdminTab('guideVideos');
                 fetchGuideVideosResources();
               }}
