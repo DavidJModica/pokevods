@@ -292,6 +292,13 @@ function App() {
     }
   };
 
+  // Auto-fetch resources when Manage Resources tab becomes active
+  useEffect(() => {
+    if (adminTab === 'manageResources' && allResources.length === 0) {
+      fetchAllResources();
+    }
+  }, [adminTab]);
+
 
   const fetchDeckById = async (id) => {
     try {
