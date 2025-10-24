@@ -4495,26 +4495,10 @@ function App() {
                         <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
                           <strong>Type:</strong> {resource.type} | <strong>URL:</strong> <a href={resource.url} target="_blank" rel="noopener noreferrer">{resource.url}</a>
                         </div>
-                        {isGameplayWithNoMatchups ? (
-                          <div style={{ fontSize: '0.9rem', color: '#cc7a00', marginBottom: '0.5rem' }}>
-                            <strong>⚠ Gameplay video with no matchup chapters</strong>
-                            <br />
-                            <span style={{ fontSize: '0.85rem', color: '#666' }}>
-                              This video is marked as "Gameplay" but has no matchup chapters. Add matchup chapters to organize the gameplay by opponent deck.
-                            </span>
+                        <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
+                            <strong>Author:</strong> {resource.authorProfile?.name || resource.author || 'Unknown'} | <strong>Platform:</strong> {resource.platform || 'Unknown'}
                           </div>
-                        ) : (
-                          <div style={{ fontSize: '0.9rem', color: '#856404', marginBottom: '0.5rem' }}>
-                            <strong>⚠ {missingMatchups.length} Matchup(s) Missing Opponent Deck:</strong>
-                            {missingMatchups.map((ch, idx) => (
-                              <span key={ch.id}>
-                                {idx > 0 && ', '}
-                                {ch.timestamp} - {ch.title || 'Untitled'}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                        </div>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button
                           className="btn btn-primary"
@@ -4524,7 +4508,7 @@ function App() {
                             setShowEditDeckDropdown(false);
                           }}
                         >
-                          {isGameplayWithNoMatchups ? '➕ Add Matchup Chapters' : '✏️ Edit & Assign Matchups'}
+                          ✏️ Edit
                         </button>
                         <button
                           className="btn btn-secondary"
