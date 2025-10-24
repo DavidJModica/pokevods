@@ -147,11 +147,43 @@ module.exports = async function handler(req, res) {
           return res.status(200).json(filteredResources);
         }
 
-        // Get all resources for a deck (only approved by default)
+// Get all resources (for admin management) when no deckId provided
         if (!deckId) {
-          return res.status(400).json({ error: 'Deck ID is required' });
+          const allResources = await prisma.resource.findMany({
+            include: {
+              deck: {
+                select: {
+                  id: true,
+                  name: true,
+                  icons: true
+                }
+              },
+              authorProfile: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true
+                }
+              },
+              chapters: {
+                include: {
+                  opposingDeck: {
+                    select: {
+                      id: true,
+                      name: true,
+                      icons: true
+                    }
+                  }
+                },
+                orderBy: { timestamp: 'asc' }
+              }
+            },
+            orderBy: { createdAt: 'desc' }
+          });
+          return res.status(200).json(allResources);
         }
 
+        // Get all resources for a specific deck (only approved by default)
         const resources = await prisma.resource.findMany({
           where: {
             deckId: parseInt(deckId),
