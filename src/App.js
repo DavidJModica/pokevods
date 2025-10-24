@@ -4469,7 +4469,7 @@ function App() {
       )}
       {/* Guide Videos Tab */}
           {adminTab === 'guideVideos' && (
-            <div>
+            <div key={`guide-videos-${guideVideosResources.length}`}>
               <h2>Guide Videos ({guideVideosResources.length})</h2>
               <p style={{ color: '#666', marginBottom: '1.5rem' }}>
                 View and edit guide-type resources (excludes Gameplay and Guide and Gameplay videos)
