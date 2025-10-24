@@ -243,13 +243,45 @@ module.exports = async function handler(req, res) {
           });
         }
 
+        // If author name is provided, find or create Author record
+        let authorId = null;
+        if (author && author.trim()) {
+          const authorName = author.trim();
+
+          // Try to find existing author (case-insensitive)
+          let authorRecord = await prisma.author.findFirst({
+            where: {
+              name: {
+                equals: authorName,
+                mode: 'insensitive'
+              }
+            }
+          });
+
+          // If author doesn't exist, create new one
+          if (!authorRecord) {
+            // Generate slug from name (lowercase, replace spaces with hyphens)
+            const slug = authorName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+            authorRecord = await prisma.author.create({
+              data: {
+                name: authorName,
+                slug: slug
+              }
+            });
+          }
+
+          authorId = authorRecord.id;
+        }
+
         const newResource = await prisma.resource.create({
           data: {
             ...(deckId && { deckId: parseInt(deckId) }),
             type,
             title,
             url,
-            author,
+            author, // Keep legacy field for backward compatibility
+            ...(authorId && { authorId }), // Link to Author record
             platform,
             accessType: accessType || 'Free',
             publicationDate: publicationDate ? new Date(publicationDate) : null,
@@ -258,7 +290,8 @@ module.exports = async function handler(req, res) {
             status: status || 'approved' // Default to approved if not specified
           },
           include: {
-            chapters: true
+            chapters: true,
+            authorProfile: true
           }
         });
 

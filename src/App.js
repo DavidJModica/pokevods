@@ -83,7 +83,7 @@ function App() {
   const [showGuideEditor, setShowGuideEditor] = useState(false);
   const [editingGuideId, setEditingGuideId] = useState(null);
   const [importResults, setImportResults] = useState(null);
-  const [adminTab, setAdminTab] = useState('bulkImport'); // 'bulkImport', 'reviewQueue', 'matchupQueue', 'manageGuides', 'manageAuthors', 'manageVideos', 'hostedGuides'
+  const [adminTab, setAdminTab] = useState('bulkImport'); // 'bulkImport', 'reviewQueue', 'matchupQueue', 'manageGuides', 'manageAuthors', 'guideVideos', 'hostedGuides'
   const [editingDeck, setEditingDeck] = useState(null);
   const [editingChapter, setEditingChapter] = useState(null);
   const [editChapterDeckSearch, setEditChapterDeckSearch] = useState('');
@@ -93,7 +93,7 @@ function App() {
   const [tierListResources, setTierListResources] = useState([]);
   const [tournamentResources, setTournamentResources] = useState([]);
   const [paidGuides, setPaidGuides] = useState([]);
-  const [manageVideosResources, setAllResources] = useState([]);
+  const [guideVideosResources, setGuideVideosResources] = useState([]);
   const [renderCount, setRenderCount] = useState(0);
   const [authors, setAuthors] = useState([]);
   const [editingAuthor, setEditingAuthor] = useState({}); // { [authorId]: { name, youtube, metafy } }
@@ -277,29 +277,32 @@ function App() {
     }
   };
 
-  const fetchManageVideosResources = async () => {
+  const fetchGuideVideosResources = async () => {
     try {
       const response = await fetch('/api/resources');
       const data = await response.json();
+      // Filter out Gameplay and Guide and Gameplay videos
+      const guideVideos = data.filter(resource =>
+        resource.type !== 'Gameplay' && resource.type !== 'Guide and Gameplay'
+      );
       // Sort by createdAt, newest first
-      const sorted = data.sort((a, b) => {
+      const sorted = guideVideos.sort((a, b) => {
         const dateA = new Date(a.createdAt);
         const dateB = new Date(b.createdAt);
         return dateB - dateA;
       });
-      setAllResources(sorted);
-      setRenderCount(prev => prev + 1);
+      setGuideVideosResources(sorted);
     } catch (error) {
-      console.error('Error fetching all resources:', error);
+      console.error('Error fetching guide videos:', error);
     }
   };
 
-  // Auto-fetch resources when Manage Videos tab becomes active
+  // Auto-fetch resources when Guide Videos tab becomes active
   useEffect(() => {
-    if (adminTab === 'manageVideos' && manageVideosResources.length === 0) {
-      fetchManageVideosResources();
+    if (adminTab === 'guideVideos' && guideVideosResources.length === 0) {
+      fetchGuideVideosResources();
     }
-  }, [adminTab]);
+  }, [adminTab, guideVideosResources.length]);
 
 
   const fetchDeckById = async (id) => {
@@ -2819,22 +2822,22 @@ function App() {
             </button>
             <button
               onClick={() => {
-                setAllResources([]);  // Clear first to trigger re-render
-                setAdminTab('manageVideos');
-                fetchManageVideosResources();
+                setGuideVideosResources([]);  // Clear first to trigger re-render
+                setAdminTab('guideVideos');
+                fetchGuideVideosResources();
               }}
               style={{
                 padding: '1rem 2rem',
                 border: 'none',
-                background: adminTab === 'manageVideos' ? '#007bff' : 'transparent',
-                color: adminTab === 'manageVideos' ? 'white' : '#333',
+                background: adminTab === 'guideVideos' ? '#007bff' : 'transparent',
+                color: adminTab === 'guideVideos' ? 'white' : '#333',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                borderBottom: adminTab === 'manageVideos' ? '3px solid #007bff' : 'none',
+                borderBottom: adminTab === 'guideVideos' ? '3px solid #007bff' : 'none',
                 marginBottom: '-2px'
               }}
             >
-              📚 Manage Videos {manageVideosResources.length > 0 && `(${manageVideosResources.length})`}
+              📚 Guide Videos {guideVideosResources.length > 0 && `(${guideVideosResources.length})`}
             </button>
             <button
               onClick={() => setAdminTab('hostedGuides')}
@@ -4473,18 +4476,18 @@ function App() {
           )}
         </div>
       )}
-      {/* Manage Videos Tab */}
-          {adminTab === 'manageVideos' && (
+      {/* Guide Videos Tab */}
+          {adminTab === 'guideVideos' && (
             <div>
-              <h2>Manage Videos ({manageVideosResources.length})</h2>
+              <h2>Guide Videos ({guideVideosResources.length})</h2>
               <p style={{ color: '#666', marginBottom: '1.5rem' }}>
-                View and edit all resources sorted by newest first
+                View and edit guide-type resources (excludes Gameplay and Guide and Gameplay videos)
               </p>
 
-              {manageVideosResources.length === 0 ? (
-                <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No matchups need review!</p>
+              {guideVideosResources.length === 0 ? (
+                <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No guide videos found!</p>
               ) : (
-                manageVideosResources.map((resource, index) => {
+                guideVideosResources.map((resource, index) => {
                   return (
                     <div key={resource.id} style={{ border: '1px solid #ddd', padding: '1.5rem', marginBottom: '1rem', borderRadius: '8px', backgroundColor: index % 2 === 0 ? '#f9f9f9' : 'white' }}>
                       <div style={{ marginBottom: '1rem' }}>
