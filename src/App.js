@@ -1708,6 +1708,9 @@ function App() {
                                 const response = await fetch(`/api/decks/${deck.id}/matchups`);
                                 const data = await response.json();
                                 const allDeckIds = data.relatedDecks?.map(d => d.id) || [deck.id];
+                                console.log(`🔍 Matchup filter: ${deck.name}`);
+                                console.log(`   Related deck IDs (including variants):`, allDeckIds);
+                                console.log(`   Related decks:`, data.relatedDecks?.map(d => d.name));
                                 setRelatedDeckIds(allDeckIds);
                               } catch (error) {
                                 console.error('Error fetching related decks:', error);
@@ -1946,9 +1949,15 @@ function App() {
                     if (!matchupFilter) return true;
                     // Use relatedDeckIds to include variants
                     const deckIdsToCheck = relatedDeckIds.length > 0 ? relatedDeckIds : [matchupFilter];
-                    return resource.chapters?.some(chapter =>
+                    const hasMatchup = resource.chapters?.some(chapter =>
                       chapter.chapterType === 'Matchup' && deckIdsToCheck.includes(chapter.opposingDeckId)
                     );
+                    if (matchupFilter && !hasMatchup) {
+                      console.log(`❌ Filtered out: ${resource.title}`);
+                      console.log(`   Chapters:`, resource.chapters?.filter(c => c.chapterType === 'Matchup').map(c => ({ opposingDeckId: c.opposingDeckId, name: c.opposingDeck?.name })));
+                      console.log(`   Looking for deck IDs:`, deckIdsToCheck);
+                    }
+                    return hasMatchup;
                   })
                   .filter(resource => {
                     // Filter by resource type
