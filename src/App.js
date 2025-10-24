@@ -4478,6 +4478,7 @@ function App() {
             </>
           )}
         </div>
+      )}
       {/* Manage Resources Tab */}
       {adminTab === 'manageResources' && (
         <div>
