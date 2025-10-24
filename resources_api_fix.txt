@@ -1,0 +1,37 @@
+// Get all resources (for admin management) when no deckId provided
+        if (!deckId) {
+          const allResources = await prisma.resource.findMany({
+            include: {
+              deck: {
+                select: {
+                  id: true,
+                  name: true,
+                  icons: true
+                }
+              },
+              authorProfile: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true
+                }
+              },
+              chapters: {
+                include: {
+                  opposingDeck: {
+                    select: {
+                      id: true,
+                      name: true,
+                      icons: true
+                    }
+                  }
+                },
+                orderBy: { timestamp: 'asc' }
+              }
+            },
+            orderBy: { createdAt: 'desc' }
+          });
+          return res.status(200).json(allResources);
+        }
+
+        // Get all resources for a specific deck (only approved by default)
