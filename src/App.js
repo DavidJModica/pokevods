@@ -3883,6 +3883,72 @@ function App() {
             </div>
           )}
 
+
+      {/* Guide Videos Tab */}
+          {adminTab === 'guideVideos' && (
+            <div key={`guide-videos-${guideVideosResources.length}`}>
+              <h2>Guide Videos ({guideVideosResources.length})</h2>
+              <p style={{ color: '#666', marginBottom: '1.5rem' }}>
+                View and edit guide-type resources (excludes Gameplay and Guide and Gameplay videos)
+              </p>
+
+              {guideVideosResources.length === 0 ? (
+                <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No guide videos found!</p>
+              ) : (
+                guideVideosResources.map((resource, index) => {
+                  return (
+                    <div key={resource.id} style={{ border: '1px solid #ddd', padding: '1.5rem', marginBottom: '1rem', borderRadius: '8px', backgroundColor: index % 2 === 0 ? '#f9f9f9' : 'white' }}>
+                      <div style={{ marginBottom: '1rem' }}>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                          {resource.deck?.name && <span style={{ color: '#28a745' }}>{resource.deck.name}</span>}
+                          {' '}- {resource.title}
+                        </div>
+                        <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
+                          <strong>Type:</strong> {resource.type} | <strong>URL:</strong> <a href={resource.url} target="_blank" rel="noopener noreferrer">{resource.url}</a>
+                        </div>
+                        <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
+                            <strong>Author:</strong> {resource.authorProfile?.name || resource.author || 'Unknown'} | <strong>Platform:</strong> {resource.platform || 'Unknown'}
+                          </div>
+                        </div>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          className="btn btn-primary"
+                          onClick={() => {
+                            setEditingResource(resource);
+                            setEditDeckSearch(resource.deck?.name || '');
+                            setShowEditDeckDropdown(false);
+                          }}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => {
+                            setEditingResource(resource);
+                            setEditDeckSearch(resource.deck?.name || '');
+                            setShowEditDeckDropdown(false);
+                            // Initialize chapter deck search for existing matchup chapters
+                            const chapterDeckSearchInit = {};
+                            resource.chapters?.forEach((chapter, index) => {
+                              if (chapter.chapterType === 'Matchup' && chapter.opposingDeck) {
+                                chapterDeckSearchInit[index] = chapter.opposingDeck.name;
+                              }
+                            });
+                            setEditResourceChapterDeckSearch(chapterDeckSearchInit);
+                            setShowEditResourceChapterDeckDropdown(null);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          style={{ backgroundColor: '#6c757d', color: 'white' }}
+                        >
+                          📝 Edit Resource
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
           {/* Manage Authors Tab */}
           {adminTab === 'manageAuthors' && (
             <div>
@@ -4457,71 +4523,6 @@ function App() {
           )}
         </div>
       )}
-      {/* Guide Videos Tab */}
-          {adminTab === 'guideVideos' && (
-            <div key={`guide-videos-${guideVideosResources.length}`}>
-              <h2>Guide Videos ({guideVideosResources.length})</h2>
-              <p style={{ color: '#666', marginBottom: '1.5rem' }}>
-                View and edit guide-type resources (excludes Gameplay and Guide and Gameplay videos)
-              </p>
-
-              {guideVideosResources.length === 0 ? (
-                <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No guide videos found!</p>
-              ) : (
-                guideVideosResources.map((resource, index) => {
-                  return (
-                    <div key={resource.id} style={{ border: '1px solid #ddd', padding: '1.5rem', marginBottom: '1rem', borderRadius: '8px', backgroundColor: index % 2 === 0 ? '#f9f9f9' : 'white' }}>
-                      <div style={{ marginBottom: '1rem' }}>
-                        <div style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                          {resource.deck?.name && <span style={{ color: '#28a745' }}>{resource.deck.name}</span>}
-                          {' '}- {resource.title}
-                        </div>
-                        <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
-                          <strong>Type:</strong> {resource.type} | <strong>URL:</strong> <a href={resource.url} target="_blank" rel="noopener noreferrer">{resource.url}</a>
-                        </div>
-                        <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
-                            <strong>Author:</strong> {resource.authorProfile?.name || resource.author || 'Unknown'} | <strong>Platform:</strong> {resource.platform || 'Unknown'}
-                          </div>
-                        </div>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button
-                          className="btn btn-primary"
-                          onClick={() => {
-                            setEditingResource(resource);
-                            setEditDeckSearch(resource.deck?.name || '');
-                            setShowEditDeckDropdown(false);
-                          }}
-                        >
-                          ✏️ Edit
-                        </button>
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => {
-                            setEditingResource(resource);
-                            setEditDeckSearch(resource.deck?.name || '');
-                            setShowEditDeckDropdown(false);
-                            // Initialize chapter deck search for existing matchup chapters
-                            const chapterDeckSearchInit = {};
-                            resource.chapters?.forEach((chapter, index) => {
-                              if (chapter.chapterType === 'Matchup' && chapter.opposingDeck) {
-                                chapterDeckSearchInit[index] = chapter.opposingDeck.name;
-                              }
-                            });
-                            setEditResourceChapterDeckSearch(chapterDeckSearchInit);
-                            setShowEditResourceChapterDeckDropdown(null);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          style={{ backgroundColor: '#6c757d', color: 'white' }}
-                        >
-                          📝 Edit Resource
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          )}
 
       <div className="search-section">
         <div className="search-bar-fullwidth">
