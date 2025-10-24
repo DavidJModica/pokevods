@@ -1705,7 +1705,7 @@ function App() {
 
                               // Fetch all related deck IDs (including variants)
                               try {
-                                const response = await fetch(`/api/decks/${deck.id}/matchups`);
+                                const response = await fetch(`/api/deck-matchups?id=${deck.id}`);
                                 const data = await response.json();
                                 const allDeckIds = data.relatedDecks?.map(d => d.id) || [deck.id];
                                 console.log(`🔍 Matchup filter: ${deck.name}`);
