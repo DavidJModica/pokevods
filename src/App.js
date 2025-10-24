@@ -2717,7 +2717,7 @@ function App() {
           <button onClick={() => setCurrentView('home')} className="back-btn">
             ← Back to Home
           </button>
-          <h1 style={{ margin: 0, flex: 1, textAlign: 'center' }}>🎴 PokeVods - Admin Panel v0.1.8</h1>
+          <h1 style={{ margin: 0, flex: 1, textAlign: 'center' }}>🎴 PokeVods - Admin Panel v0.1.9</h1>
           <button
             onClick={handleLogout}
             className="btn btn-secondary"
