@@ -8,6 +8,9 @@ import {
   DEFAULT_ACCESS_TYPE_FILTERS,
   DEFAULT_PLATFORM_FILTERS
 } from './constants';
+import { getYouTubeTimestampedURL } from './utils/youtube';
+import { sortChaptersByTime } from './utils/format';
+import { getPlatformIcon } from './utils/icons';
 
 function App() {
   const [decks, setDecks] = useState([]);
@@ -950,45 +953,6 @@ function App() {
       console.error('Error approving resource:', error);
       alert(`Error approving resource: ${error.message}`);
     }
-  };
-
-  const getPlatformIcon = (platform) => {
-    switch (platform?.toLowerCase()) {
-      case 'youtube': return '📺';
-      case 'limitlesstcg': return '🎮';
-      case 'pokebeach': return '🏖️';
-      case 'twitch': return '💜';
-      default: return '🌐';
-    }
-  };
-
-  // Convert timestamp to seconds for sorting
-  const timestampToSeconds = (timestamp) => {
-    const parts = timestamp.split(':').map(Number);
-    if (parts.length === 3) {
-      // HH:MM:SS
-      return parts[0] * 3600 + parts[1] * 60 + parts[2];
-    } else if (parts.length === 2) {
-      // MM:SS
-      return parts[0] * 60 + parts[1];
-    }
-    return 0;
-  };
-
-  // Sort chapters by timestamp
-  const sortChaptersByTime = (chapters) => {
-    return [...chapters].sort((a, b) => {
-      return timestampToSeconds(a.timestamp) - timestampToSeconds(b.timestamp);
-    });
-  };
-
-  // Create YouTube timestamped URL
-  const getYouTubeTimestampedURL = (videoUrl, timestamp) => {
-    const seconds = timestampToSeconds(timestamp);
-    if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
-      return `${videoUrl}${videoUrl.includes('?') ? '&' : '?'}t=${seconds}`;
-    }
-    return videoUrl;
   };
 
   // Author Page View
