@@ -11,6 +11,7 @@ import {
 import { getYouTubeTimestampedURL } from './utils/youtube';
 import { sortChaptersByTime } from './utils/format';
 import { getPlatformIcon } from './utils/icons';
+import * as api from './services/api';
 
 function App() {
   const [decks, setDecks] = useState([]);
@@ -165,13 +166,7 @@ function App() {
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/initial-data');
-
-      if (!response.ok) {
-        throw new Error('Initial data endpoint failed');
-      }
-
-      const result = await response.json();
+      const result = await api.fetchInitialData();
 
       if (result.success) {
         setDecks(result.data.decks);
@@ -198,8 +193,7 @@ function App() {
   const fetchDecks = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/decks');
-      const data = await response.json();
+      const data = await api.fetchDecks();
       setDecks(data);
     } catch (error) {
       console.error('Error fetching decks:', error);
