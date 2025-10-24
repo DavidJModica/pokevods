@@ -279,19 +279,9 @@ function App() {
 
   const fetchGuideVideosResources = async () => {
     try {
-      const response = await fetch('/api/resources');
+      const response = await fetch('/api/guide-videos');
       const data = await response.json();
-      // Filter out Gameplay and Guide and Gameplay videos
-      const guideVideos = data.filter(resource =>
-        resource.type !== 'Gameplay' && resource.type !== 'Guide and Gameplay'
-      );
-      // Sort by createdAt, newest first
-      const sorted = guideVideos.sort((a, b) => {
-        const dateA = new Date(a.createdAt);
-        const dateB = new Date(b.createdAt);
-        return dateB - dateA;
-      });
-      setGuideVideosResources(sorted);
+      setGuideVideosResources(data);
     } catch (error) {
       console.error('Error fetching guide videos:', error);
     }
