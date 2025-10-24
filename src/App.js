@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import './App.css';
 import HostedGuidesAdmin from './components/HostedGuidesAdmin';
 import GuideEditorStandalone from './components/GuideEditorStandalone';
-
-// Format date for Mega Evolutions format (Sept 26, 2025)
-const MEGA_EVOLUTIONS_FORMAT_DATE = new Date('2025-09-26');
+import {
+  MEGA_EVOLUTIONS_FORMAT_DATE,
+  DEFAULT_RESOURCE_TYPE_FILTERS,
+  DEFAULT_ACCESS_TYPE_FILTERS,
+  DEFAULT_PLATFORM_FILTERS
+} from './constants';
 
 function App() {
   const [decks, setDecks] = useState([]);
@@ -112,25 +115,9 @@ function App() {
   const [loginError, setLoginError] = useState('');
 
   // Resource filters for deck page
-  const [resourceTypeFilters, setResourceTypeFilters] = useState({
-    'Guide': true,
-    'Gameplay': true,
-    'Guide and Gameplay': true,
-    'Discussion': true,
-    'Tournament Report': true,
-    'Tierlist': true,
-    'Fundamentals': true,
-    'Metagame Discussion': true
-  });
-  const [accessTypeFilters, setAccessTypeFilters] = useState({
-    'Free': true,
-    'Paid': true
-  });
-  const [platformFilters, setPlatformFilters] = useState({
-    'YouTube': true,
-    'Metafy': true,
-    'Other': true
-  });
+  const [resourceTypeFilters, setResourceTypeFilters] = useState(DEFAULT_RESOURCE_TYPE_FILTERS);
+  const [accessTypeFilters, setAccessTypeFilters] = useState(DEFAULT_ACCESS_TYPE_FILTERS);
+  const [platformFilters, setPlatformFilters] = useState(DEFAULT_PLATFORM_FILTERS);
   const [showOutOfDate, setShowOutOfDate] = useState(false);
 
   // Fetch all initial data in a single API call on load
@@ -1710,9 +1697,6 @@ function App() {
                                 const response = await fetch(`/api/deck-matchups?id=${deck.id}`);
                                 const data = await response.json();
                                 const allDeckIds = data.relatedDecks?.map(d => d.id) || [deck.id];
-                                console.log(`🔍 Matchup filter: ${deck.name}`);
-                                console.log(`   Related deck IDs (including variants):`, allDeckIds);
-                                console.log(`   Related decks:`, data.relatedDecks?.map(d => d.name));
                                 setRelatedDeckIds(allDeckIds);
                               } catch (error) {
                                 console.error('Error fetching related decks:', error);
@@ -1956,15 +1940,9 @@ function App() {
                     if (!matchupFilter) return true;
                     // Use relatedDeckIds to include variants
                     const deckIdsToCheck = relatedDeckIds.length > 0 ? relatedDeckIds : [matchupFilter];
-                    const hasMatchup = resource.chapters?.some(chapter =>
+                    return resource.chapters?.some(chapter =>
                       chapter.chapterType === 'Matchup' && deckIdsToCheck.includes(chapter.opposingDeckId)
                     );
-                    if (matchupFilter && !hasMatchup) {
-                      console.log(`❌ Filtered out: ${resource.title}`);
-                      console.log(`   Chapters:`, resource.chapters?.filter(c => c.chapterType === 'Matchup').map(c => ({ opposingDeckId: c.opposingDeckId, name: c.opposingDeck?.name })));
-                      console.log(`   Looking for deck IDs:`, deckIdsToCheck);
-                    }
-                    return hasMatchup;
                   })
                   .filter(resource => {
                     // Filter by resource type
