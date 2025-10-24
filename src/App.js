@@ -1256,7 +1256,7 @@ function App() {
 
         {/* Edit Resource Modal */}
         {editingResource && (
-          <div key={editingResource?.id || 'modal'} className="edit-resource-overlay" onClick={() => setEditingResource(null)}>
+          <div className="edit-resource-overlay" onClick={() => setEditingResource(null)}>
             <div className="edit-resource-modal" onClick={(e) => e.stopPropagation()}>
               <h4>Edit Resource</h4>
               <form onSubmit={handleUpdateResource}>
@@ -2291,7 +2291,7 @@ function App() {
 
                     {/* Edit Resource Form Modal */}
                     {showAdmin && editingResource && editingResource.id === resource.id && (
-                      <div key={editingResource?.id || 'modal'} className="edit-resource-overlay" onClick={() => setEditingResource(null)}>
+                      <div className="edit-resource-overlay" onClick={() => setEditingResource(null)}>
                         <div className="edit-resource-modal" onClick={(e) => e.stopPropagation()}>
                           <h4>Edit Resource</h4>
                           <form onSubmit={handleUpdateResource}>
@@ -4126,7 +4126,7 @@ function App() {
 
         {/* Edit Resource Modal (can be opened from review queue) */}
         {editingResource && (
-          <div key={editingResource?.id || 'modal'} className="edit-resource-overlay" onClick={() => setEditingResource(null)}>
+          <div className="edit-resource-overlay" onClick={() => setEditingResource(null)}>
             <div className="edit-resource-modal" onClick={(e) => e.stopPropagation()}>
               <h4>Edit Resource</h4>
               <form onSubmit={handleUpdateResource}>
