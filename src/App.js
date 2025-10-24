@@ -94,7 +94,7 @@ function App() {
   const [tournamentResources, setTournamentResources] = useState([]);
   const [paidGuides, setPaidGuides] = useState([]);
   const [allResources, setAllResources] = useState([]);
-  const [, forceUpdate] = useState({});
+  const [renderCount, setRenderCount] = useState(0);
   const [authors, setAuthors] = useState([]);
   const [editingAuthor, setEditingAuthor] = useState({}); // { [authorId]: { name, youtube, metafy } }
   const [editResourceChapterDeckSearch, setEditResourceChapterDeckSearch] = useState({}); // { [chapterIndex]: deckSearch }
@@ -288,7 +288,7 @@ function App() {
         return dateB - dateA;
       });
       setAllResources(sorted);
-      forceUpdate({});
+      setRenderCount(prev => prev + 1);
     } catch (error) {
       console.error('Error fetching all resources:', error);
     }
@@ -2714,7 +2714,7 @@ function App() {
           <button onClick={() => setCurrentView('home')} className="back-btn">
             ← Back to Home
           </button>
-          <h1 style={{ margin: 0, flex: 1, textAlign: 'center' }}>🎴 PokeVods - Admin Panel v0.1.1</h1>
+          <h1 style={{ margin: 0, flex: 1, textAlign: 'center' }}>🎴 PokeVods - Admin Panel v0.1.2</h1>
           <button
             onClick={handleLogout}
             className="btn btn-secondary"
@@ -4562,7 +4562,7 @@ function App() {
                           setEditingResource(resource);
                           setEditDeckSearch(resource.deck?.name || '');
                           setShowEditDeckDropdown(false);
-                          forceUpdate({});
+                          setRenderCount(prev => prev + 1);
                         }}
                         className="btn btn-primary"
                         style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
