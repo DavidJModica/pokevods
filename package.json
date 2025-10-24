@@ -1,6 +1,6 @@
 {
   "name": "pokevods",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "private": true,
   "dependencies": {
     "@prisma/client": "^6.17.1",
