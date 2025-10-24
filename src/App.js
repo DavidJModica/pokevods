@@ -1694,6 +1694,8 @@ function App() {
                       .slice(0, 10)
                       .map(deck => {
                         const icons = deck.icons ? JSON.parse(deck.icons) : [];
+                        // Check if this deck has variants (is a base deck)
+                        const hasVariants = !deck.variantOf && decks.some(d => d.variantOf === deck.name);
                         return (
                           <div
                             key={deck.id}
@@ -1727,7 +1729,12 @@ function App() {
                                 <div className="deck-search-icon-placeholder">?</div>
                               )}
                             </div>
-                            <span>{deck.name}</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                              <span style={{ fontWeight: '500' }}>{deck.name}</span>
+                              {hasVariants && (
+                                <span style={{ fontSize: '0.75rem', color: '#666' }}>All Variants</span>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
