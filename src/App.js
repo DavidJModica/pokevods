@@ -94,6 +94,7 @@ function App() {
   const [tournamentResources, setTournamentResources] = useState([]);
   const [paidGuides, setPaidGuides] = useState([]);
   const [allResources, setAllResources] = useState([]);
+  const [, forceUpdate] = useState({});
   const [authors, setAuthors] = useState([]);
   const [editingAuthor, setEditingAuthor] = useState({}); // { [authorId]: { name, youtube, metafy } }
   const [editResourceChapterDeckSearch, setEditResourceChapterDeckSearch] = useState({}); // { [chapterIndex]: deckSearch }
@@ -287,6 +288,7 @@ function App() {
         return dateB - dateA;
       });
       setAllResources(sorted);
+      forceUpdate({});
     } catch (error) {
       console.error('Error fetching all resources:', error);
     }
@@ -4560,6 +4562,7 @@ function App() {
                           setEditingResource(resource);
                           setEditDeckSearch(resource.deck?.name || '');
                           setShowEditDeckDropdown(false);
+                          forceUpdate({});
                         }}
                         className="btn btn-primary"
                         style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
