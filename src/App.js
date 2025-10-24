@@ -83,7 +83,7 @@ function App() {
   const [showGuideEditor, setShowGuideEditor] = useState(false);
   const [editingGuideId, setEditingGuideId] = useState(null);
   const [importResults, setImportResults] = useState(null);
-  const [adminTab, setAdminTab] = useState('bulkImport'); // 'bulkImport', 'reviewQueue', 'matchupQueue', 'manageGuides', 'manageAuthors', 'manageResources', 'hostedGuides'
+  const [adminTab, setAdminTab] = useState('bulkImport'); // 'bulkImport', 'reviewQueue', 'matchupQueue', 'manageGuides', 'manageAuthors', 'manageVideos', 'hostedGuides'
   const [editingDeck, setEditingDeck] = useState(null);
   const [editingChapter, setEditingChapter] = useState(null);
   const [editChapterDeckSearch, setEditChapterDeckSearch] = useState('');
@@ -294,9 +294,9 @@ function App() {
     }
   };
 
-  // Auto-fetch resources when Manage Resources tab becomes active
+  // Auto-fetch resources when Manage Videos tab becomes active
   useEffect(() => {
-    if (adminTab === 'manageResources' && allResources.length === 0) {
+    if (adminTab === 'manageVideos' && allResources.length === 0) {
       fetchAllResources();
     }
   }, [adminTab]);
@@ -2714,7 +2714,7 @@ function App() {
           <button onClick={() => setCurrentView('home')} className="back-btn">
             ← Back to Home
           </button>
-          <h1 style={{ margin: 0, flex: 1, textAlign: 'center' }}>🎴 PokeVods - Admin Panel v0.1.6</h1>
+          <h1 style={{ margin: 0, flex: 1, textAlign: 'center' }}>🎴 PokeVods - Admin Panel v0.1.7</h1>
           <button
             onClick={handleLogout}
             className="btn btn-secondary"
@@ -2820,21 +2820,21 @@ function App() {
             <button
               onClick={() => {
                 setAllResources([]);  // Clear first to trigger re-render
-                setAdminTab('manageResources');
+                setAdminTab('manageVideos');
                 fetchAllResources();
               }}
               style={{
                 padding: '1rem 2rem',
                 border: 'none',
-                background: adminTab === 'manageResources' ? '#007bff' : 'transparent',
-                color: adminTab === 'manageResources' ? 'white' : '#333',
+                background: adminTab === 'manageVideos' ? '#007bff' : 'transparent',
+                color: adminTab === 'manageVideos' ? 'white' : '#333',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                borderBottom: adminTab === 'manageResources' ? '3px solid #007bff' : 'none',
+                borderBottom: adminTab === 'manageVideos' ? '3px solid #007bff' : 'none',
                 marginBottom: '-2px'
               }}
             >
-              📚 Manage Resources {allResources.length > 0 && `(${allResources.length})`}
+              📚 Manage Videos {allResources.length > 0 && `(${allResources.length})`}
             </button>
             <button
               onClick={() => setAdminTab('hostedGuides')}
@@ -4489,80 +4489,87 @@ function App() {
           )}
         </div>
       )}
-      {/* Manage Resources Tab */}
-      {adminTab === 'manageResources' && (
-        <div>
-          <h2>Manage All Resources ({allResources.length})</h2>
-          <p style={{ color: '#666', marginBottom: '1.5rem' }}>
-            View and edit all resources sorted by newest first.
-          </p>
+      {/* Manage Videos Tab */}
+          {adminTab === 'manageVideos' && (
+            <div>
+              <h2>Manage Videos ({allResources.length})</h2>
+              <p style={{ color: '#666', marginBottom: '1.5rem' }}>
+                View and edit all resources sorted by newest first
+              </p>
 
-          {allResources.length === 0 ? (
-            <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No resources found!</p>
-          ) : (
-            allResources.map((resource, index) => (
-              <div key={resource.id} style={{ border: '1px solid #ddd', padding: '1.5rem', marginBottom: '1rem', borderRadius: '8px', backgroundColor: index % 2 === 0 ? '#f9f9f9' : 'white' }}>
-                <div style={{ marginBottom: '1rem' }}>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                    {resource.deck?.name && <span style={{ color: '#28a745' }}>{resource.deck.name}</span>}
-                    {' '}- {resource.title}
-                  </div>
-                  <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
-                    <strong>Type:</strong> {resource.type} | <strong>Author:</strong> {resource.authorProfile?.name || resource.author || 'Unknown'}
-                  </div>
-                  <div style={{ fontSize: '0.85rem', color: '#999' }}>
-                    <strong>Created:</strong> {new Date(resource.createdAt).toLocaleString()}
-                    {resource.publicationDate && (
-                      <> | <strong>Published:</strong> {new Date(resource.publicationDate).toLocaleDateString()}</>
-                    )}
-                  </div>
-                  <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.5rem' }}>
-                    <strong>URL:</strong> <a href={resource.url} target="_blank" rel="noopener noreferrer">{resource.url}</a>
-                  </div>
-                  {resource.chapters && resource.chapters.length > 0 && (
-                    <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.5rem' }}>
-                      <strong>Chapters:</strong> {resource.chapters.length}
+              {allResources.length === 0 ? (
+                <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No matchups need review!</p>
+              ) : (
+                allResources.map(resource => {
+                  return (
+                    <div key={resource.id} style={{ border: '1px solid #ddd', padding: '1.5rem', marginBottom: '1rem', borderRadius: '8px', backgroundColor: index % 2 === 0 ? '#f9f9f9' : 'white' }}>
+                      <div style={{ marginBottom: '1rem' }}>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                          {resource.deck?.name && <span style={{ color: '#28a745' }}>{resource.deck.name}</span>}
+                          {' '}- {resource.title}
+                        </div>
+                        <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
+                          <strong>Type:</strong> {resource.type} | <strong>URL:</strong> <a href={resource.url} target="_blank" rel="noopener noreferrer">{resource.url}</a>
+                        </div>
+                        {isGameplayWithNoMatchups ? (
+                          <div style={{ fontSize: '0.9rem', color: '#cc7a00', marginBottom: '0.5rem' }}>
+                            <strong>⚠ Gameplay video with no matchup chapters</strong>
+                            <br />
+                            <span style={{ fontSize: '0.85rem', color: '#666' }}>
+                              This video is marked as "Gameplay" but has no matchup chapters. Add matchup chapters to organize the gameplay by opponent deck.
+                            </span>
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: '0.9rem', color: '#856404', marginBottom: '0.5rem' }}>
+                            <strong>⚠ {missingMatchups.length} Matchup(s) Missing Opponent Deck:</strong>
+                            {missingMatchups.map((ch, idx) => (
+                              <span key={ch.id}>
+                                {idx > 0 && ', '}
+                                {ch.timestamp} - {ch.title || 'Untitled'}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          className="btn btn-primary"
+                          onClick={() => {
+                            setEditingResource(resource);
+                            setEditDeckSearch(resource.deck?.name || '');
+                            setShowEditDeckDropdown(false);
+                          }}
+                        >
+                          {isGameplayWithNoMatchups ? '➕ Add Matchup Chapters' : '✏️ Edit & Assign Matchups'}
+                        </button>
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => {
+                            setEditingResource(resource);
+                            setEditDeckSearch(resource.deck?.name || '');
+                            setShowEditDeckDropdown(false);
+                            // Initialize chapter deck search for existing matchup chapters
+                            const chapterDeckSearchInit = {};
+                            resource.chapters?.forEach((chapter, index) => {
+                              if (chapter.chapterType === 'Matchup' && chapter.opposingDeck) {
+                                chapterDeckSearchInit[index] = chapter.opposingDeck.name;
+                              }
+                            });
+                            setEditResourceChapterDeckSearch(chapterDeckSearchInit);
+                            setShowEditResourceChapterDeckDropdown(null);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          style={{ backgroundColor: '#6c757d', color: 'white' }}
+                        >
+                          📝 Edit Resource
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => {
-                      setEditingResource(resource);
-                      setEditDeckSearch(resource.deck?.name || '');
-                      setShowEditDeckDropdown(false);
-                    }}
-                  >
-                    ✏️ Edit
-                  </button>
-                  <button
-                    className="btn btn-danger"
-                    onClick={async () => {
-                      if (window.confirm(`Are you sure you want to delete "${resource.title}"?`)) {
-                        try {
-                          const response = await fetch(`/api/resources/${resource.id}`, { method: 'DELETE' });
-                          if (response.ok) {
-                            setAllResources(allResources.filter(r => r.id !== resource.id));
-                            alert('Resource deleted successfully');
-                          } else {
-                            alert('Error deleting resource');
-                          }
-                        } catch (error) {
-                          console.error('Error:', error);
-                          alert('Error deleting resource');
-                        }
-                      }
-                    }}
-                  >
-                    🗑️ Delete
-                  </button>
-                </div>
-              </div>
-            ))
+                  );
+                })
+              )}
+            </div>
           )}
-        </div>
-      )}
 
       <div className="search-section">
         <div className="search-bar-fullwidth">
