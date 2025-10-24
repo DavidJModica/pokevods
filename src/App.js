@@ -4489,9 +4489,21 @@ function App() {
       {/* Manage Resources Tab */}
       {adminTab === 'manageResources' && (
         <div>
-          <h2>Manage All Resources ({allResources.length})</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 style={{ margin: 0 }}>Manage All Resources ({allResources.length})</h2>
+            <button
+              onClick={() => {
+                setAllResources([]);
+                fetchAllResources();
+              }}
+              className="btn btn-secondary"
+              style={{ padding: '0.5rem 1rem' }}
+            >
+              🔄 Refresh
+            </button>
+          </div>
           <p style={{ color: '#666', marginBottom: '1.5rem' }}>
-            View and edit all resources sorted by newest first.
+            View and edit all resources sorted by newest first. Click refresh if resources don't load automatically.
           </p>
 
           {allResources.length === 0 ? (
