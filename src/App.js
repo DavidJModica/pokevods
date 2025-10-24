@@ -2816,11 +2816,34 @@ function App() {
               <div style={{ marginBottom: '3rem', padding: '1.5rem', border: '2px solid #007bff', borderRadius: '8px', backgroundColor: '#f0f8ff' }}>
                 <h2 style={{ marginTop: 0 }}>Add Single Video</h2>
                 <p style={{ color: '#666', marginBottom: '1.5rem' }}>
-                  Manually add a single YouTube video to a specific deck.
+                  Manually add a single YouTube video. Deck selection is optional for videos like Tierlists, Fundamentals, or Metagame Discussion.
                 </p>
 
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Video Type *</label>
+                  <select
+                    value={newResource.type}
+                    onChange={(e) => setNewResource({ ...newResource, type: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', borderRadius: '6px', border: '2px solid #ddd' }}
+                  >
+                    <option value="Guide">Guide</option>
+                    <option value="Gameplay">Gameplay</option>
+                    <option value="Guide and Gameplay">Guide and Gameplay</option>
+                    <option value="Discussion">Discussion</option>
+                    <option value="Tournament Report">Tournament Report</option>
+                    <option value="Tierlist">Tierlist</option>
+                    <option value="Fundamentals">Fundamentals</option>
+                    <option value="Metagame Discussion">Metagame Discussion</option>
+                  </select>
+                  {(newResource.type === 'Tierlist' || newResource.type === 'Fundamentals' || newResource.type === 'Metagame Discussion') && (
+                    <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.5rem' }}>
+                      💡 Deck selection is optional for {newResource.type} videos.
+                    </div>
+                  )}
+                </div>
+
                 <div style={{ marginBottom: '1rem', position: 'relative' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Select Deck *</label>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Select Deck (Optional)</label>
                   <input
                     type="text"
                     placeholder="Search for deck..."
@@ -2964,10 +2987,6 @@ function App() {
                 <button
                   type="button"
                   onClick={async () => {
-                    if (!selectedSingleVideoDeck) {
-                      alert('Please select a deck first');
-                      return;
-                    }
                     if (!newResource.url || !newResource.title) {
                       alert('Please fill in URL and Title');
                       return;
@@ -2979,7 +2998,7 @@ function App() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                           ...newResource,
-                          deckId: selectedSingleVideoDeck.id
+                          deckId: selectedSingleVideoDeck?.id || null
                         })
                       });
 

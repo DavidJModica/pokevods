@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Keedris Gaming Thumbnail Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .video { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; }
+        .video h3 { margin-top: 0; }
+        .video img { max-width: 480px; border: 2px solid #ccc; }
+        .status { padding: 5px 10px; border-radius: 4px; display: inline-block; margin-left: 10px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Keedris Gaming Thumbnail Test</h1>
+    <p>Testing if thumbnail URLs are loading correctly...</p>
+
+    <div id="videos"></div>
+
+    <script>
+        const videos = [
+            {
+                title: "Fixing Mega Venusaur's Weaknesses!",
+                thumbnail: "https://img.youtube.com/vi/eIeSqxEbtsI/maxresdefault.jpg"
+            },
+            {
+                title: "Gholdengo EX Just Got BUFFED!",
+                thumbnail: "https://img.youtube.com/vi/t30wxeFRyI0/maxresdefault.jpg"
+            },
+            {
+                title: "Mega Venusaur Starts Strong!",
+                thumbnail: "https://img.youtube.com/vi/QXdNrJM6ViI/maxresdefault.jpg"
+            },
+            {
+                title: "How United Wings Survives the New Meta",
+                thumbnail: "https://img.youtube.com/vi/Y675OZAwkUc/maxresdefault.jpg"
+            },
+            {
+                title: "Lunatone + Solrock Made Ceruledge EX INSANE",
+                thumbnail: "https://img.youtube.com/vi/Hu4_UPsZhkU/maxresdefault.jpg"
+            },
+            {
+                title: "Mega Venusaur EX is an Unstoppable Wall",
+                thumbnail: "https://img.youtube.com/vi/J5mhMIy3qlo/maxresdefault.jpg"
+            },
+            {
+                title: "Mega Lucario EX Deck Profile & Gameplay",
+                thumbnail: "https://img.youtube.com/vi/Pif_9QqKON4/maxresdefault.jpg"
+            },
+            {
+                title: "One Month, One Deck Ogerpon Box Week 3",
+                thumbnail: "https://img.youtube.com/vi/4HwguEpWuag/maxresdefault.jpg"
+            }
+        ];
+
+        const container = document.getElementById('videos');
+
+        videos.forEach(video => {
+            const div = document.createElement('div');
+            div.className = 'video';
+
+            const title = document.createElement('h3');
+            title.textContent = video.title;
+
+            const statusSpan = document.createElement('span');
+            statusSpan.className = 'status';
+            statusSpan.textContent = 'Loading...';
+            title.appendChild(statusSpan);
+
+            const url = document.createElement('p');
+            url.textContent = 'URL: ' + video.thumbnail;
+            url.style.fontSize = '12px';
+            url.style.color = '#666';
+
+            const img = document.createElement('img');
+            img.src = video.thumbnail;
+            img.alt = video.title;
+
+            img.onload = function() {
+                statusSpan.textContent = 'OK ✓';
+                statusSpan.className = 'status success';
+            };
+
+            img.onerror = function() {
+                statusSpan.textContent = 'FAILED ✗';
+                statusSpan.className = 'status error';
+                img.alt = 'Failed to load: ' + video.thumbnail;
+                img.style.display = 'none';
+            };
+
+            div.appendChild(title);
+            div.appendChild(url);
+            div.appendChild(img);
+            container.appendChild(div);
+        });
+    </script>
+</body>
+</html>
