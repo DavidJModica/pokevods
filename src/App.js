@@ -337,25 +337,22 @@ function App() {
 
     setFetchingYouTube(true);
     try {
-      const response = await fetch(`/api/youtube?url=${encodeURIComponent(newResource.url)}`);
-      const data = await response.json();
+      const data = await api.fetchYouTubeData(newResource.url);
 
-      if (response.ok) {
-        // Format the publication date for the date input (YYYY-MM-DD)
-        let formattedDate = newResource.publicationDate;
-        if (data.publicationDate) {
-          const date = new Date(data.publicationDate);
-          formattedDate = date.toISOString().split('T')[0];
-        }
+      // Format the publication date for the date input (YYYY-MM-DD)
+      let formattedDate = newResource.publicationDate;
+      if (data.publicationDate) {
+        const date = new Date(data.publicationDate);
+        formattedDate = date.toISOString().split('T')[0];
+      }
 
-        // If we have author name and channel URL, update or create the author profile
-        if (data.author && data.authorUrl) {
+      // If we have author name and channel URL, update or create the author profile
+      if (data.author && data.authorUrl) {
           try {
             const slug = data.author.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
             // Check if author exists
-            const authorsResponse = await fetch('/api/authors');
-            const authors = await authorsResponse.json();
+            const authors = await api.fetchAuthors();
             const existingAuthor = authors.find(a => a.slug === slug);
 
             if (existingAuthor) {
@@ -369,26 +366,18 @@ function App() {
               }
 
               if (Object.keys(updateData).length > 0) {
-                await fetch('/api/authors', {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    id: existingAuthor.id,
-                    ...updateData
-                  })
+                await api.updateAuthor({
+                  id: existingAuthor.id,
+                  ...updateData
                 });
                 console.log(`Updated author ${data.author}:`, updateData);
               }
             } else {
               // Create new author with YouTube URL and profile picture
-              await fetch('/api/authors', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  name: data.author,
-                  youtube: data.authorUrl,
-                  profilePicture: data.authorAvatar
-                })
+              await api.createAuthor({
+                name: data.author,
+                youtube: data.authorUrl,
+                profilePicture: data.authorAvatar
               });
               console.log(`Created new author ${data.author} with YouTube data`);
             }
@@ -408,13 +397,10 @@ function App() {
           decklist: data.decklist || newResource.decklist
         });
 
-        // Store parsed chapters to be added after resource creation
-        if (data.chapters && data.chapters.length > 0) {
-          setParsedChapters(data.chapters);
-          alert(`Fetched ${data.chapters.length} chapters from video description. They will be added as "Guide" type chapters when you save the resource.`);
-        }
-      } else {
-        alert(data.error || 'Failed to fetch YouTube data');
+      // Store parsed chapters to be added after resource creation
+      if (data.chapters && data.chapters.length > 0) {
+        setParsedChapters(data.chapters);
+        alert(`Fetched ${data.chapters.length} chapters from video description. They will be added as "Guide" type chapters when you save the resource.`);
       }
     } catch (error) {
       console.error('Error fetching YouTube data:', error);
@@ -640,13 +626,8 @@ function App() {
     if (!window.confirm('Delete this resource?')) return;
 
     try {
-      const response = await fetch(`/api/resources?id=${resourceId}`, {
-        method: 'DELETE'
-      });
-
-      if (response.ok) {
-        fetchDeckById(selectedDeck.id);
-      }
+      await api.deleteResource(resourceId);
+      fetchDeckById(selectedDeck.id);
     } catch (error) {
       console.error('Error deleting resource:', error);
     }
@@ -656,27 +637,19 @@ function App() {
     e.preventDefault();
 
     try {
-      const response = await fetch('/api/chapters', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...newChapter,
-          resourceId: resourceId,
-          opposingDeckId: newChapter.opposingDeckId ? parseInt(newChapter.opposingDeckId) : null
-        })
+      await api.createChapter({
+        ...newChapter,
+        resourceId: resourceId,
+        opposingDeckId: newChapter.opposingDeckId ? parseInt(newChapter.opposingDeckId) : null
       });
 
-      if (response.ok) {
-        setNewChapter({
-          timestamp: '',
-          title: '',
-          chapterType: 'Guide',
-          opposingDeckId: null
-        });
-        fetchDeckById(selectedDeck.id);
-      }
+      setNewChapter({
+        timestamp: '',
+        title: '',
+        chapterType: 'Guide',
+        opposingDeckId: null
+      });
+      fetchDeckById(selectedDeck.id);
     } catch (error) {
       console.error('Error adding chapter:', error);
     }
@@ -686,13 +659,8 @@ function App() {
     if (!window.confirm('Delete this chapter?')) return;
 
     try {
-      const response = await fetch(`/api/chapters?id=${chapterId}`, {
-        method: 'DELETE'
-      });
-
-      if (response.ok) {
-        fetchDeckById(selectedDeck.id);
-      }
+      await api.deleteChapter(chapterId);
+      fetchDeckById(selectedDeck.id);
     } catch (error) {
       console.error('Error deleting chapter:', error);
     }
@@ -704,23 +672,15 @@ function App() {
     if (!editingChapter) return;
 
     try {
-      const response = await fetch(`/api/chapters?id=${editingChapter.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          title: editingChapter.title || '',
-          timestamp: editingChapter.timestamp,
-          chapterType: editingChapter.chapterType || 'Guide',
-          opposingDeckId: editingChapter.opposingDeckId || null
-        })
+      await api.updateChapter(editingChapter.id, {
+        title: editingChapter.title || '',
+        timestamp: editingChapter.timestamp,
+        chapterType: editingChapter.chapterType || 'Guide',
+        opposingDeckId: editingChapter.opposingDeckId || null
       });
 
-      if (response.ok) {
-        setEditingChapter(null);
-        fetchDeckById(selectedDeck.id);
-      }
+      setEditingChapter(null);
+      fetchDeckById(selectedDeck.id);
     } catch (error) {
       console.error('Error updating chapter:', error);
     }
@@ -738,35 +698,23 @@ function App() {
     setImportResults(null);
 
     try {
-      const response = await fetch('/api/bulk-import', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          source: bulkImportSource
-        })
+      const data = await api.bulkImport({
+        source: bulkImportSource
       });
 
-      const data = await response.json();
+      console.log('Bulk import response:', { data });
 
-      console.log('Bulk import response:', { status: response.status, data });
+      setImportResults(data);
 
-      if (response.ok) {
-        setImportResults(data);
+      const approvedCount = data.results.filter(r => r.success && r.status === 'approved').length;
+      const pendingCount = data.results.filter(r => r.success && r.status === 'pending').length;
+      const failedCount = data.results.filter(r => !r.success).length;
+      const noDeckCount = data.results.filter(r => !r.success && r.needsManualDeck).length;
 
-        const approvedCount = data.results.filter(r => r.success && r.status === 'approved').length;
-        const pendingCount = data.results.filter(r => r.success && r.status === 'pending').length;
-        const failedCount = data.results.filter(r => !r.success).length;
-        const noDeckCount = data.results.filter(r => !r.success && r.needsManualDeck).length;
+      alert(`Bulk import complete!\n\nApproved: ${approvedCount}\nPending Review: ${pendingCount}\nNo Deck Detected: ${noDeckCount}\nFailed: ${failedCount - noDeckCount}`);
 
-        alert(`Bulk import complete!\n\nApproved: ${approvedCount}\nPending Review: ${pendingCount}\nNo Deck Detected: ${noDeckCount}\nFailed: ${failedCount - noDeckCount}`);
-
-        if (pendingCount > 0 || noDeckCount > 0) {
-          fetchPendingResources();
-        }
-      } else {
-        alert(`Error: ${data.error}`);
+      if (pendingCount > 0 || noDeckCount > 0) {
+        fetchPendingResources();
       }
     } catch (error) {
       console.error('Bulk import error:', error);
@@ -792,26 +740,14 @@ function App() {
     setChannelScanResults(null);
 
     try {
-      const response = await fetch('/api/scan-author-channels', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          authorIds: Array.from(selectedAuthorsForScan)
-        })
-      });
+      const data = await api.scanAuthorChannels(Array.from(selectedAuthorsForScan));
 
-      const data = await response.json();
+      setChannelScanResults(data);
+      alert(`Channel scan complete!\n\nAuthors scanned: ${data.authorsScanned}\nNew videos found: ${data.newVideosFound}\nVideos added: ${data.videosAdded}\nVideos skipped: ${data.videosSkipped}\nErrors: ${data.errors.length}`);
 
-      if (response.ok) {
-        setChannelScanResults(data);
-        alert(`Channel scan complete!\n\nAuthors scanned: ${data.authorsScanned}\nNew videos found: ${data.newVideosFound}\nVideos added: ${data.videosAdded}\nVideos skipped: ${data.videosSkipped}\nErrors: ${data.errors.length}`);
-
-        // Refresh pending resources if new videos were added
-        if (data.videosAdded > 0) {
-          fetchPendingResources();
-        }
-      } else {
-        alert(`Error: ${data.error}`);
+      // Refresh pending resources if new videos were added
+      if (data.videosAdded > 0) {
+        fetchPendingResources();
       }
     } catch (error) {
       console.error('Channel scan error:', error);
@@ -826,15 +762,9 @@ function App() {
     setLoginError('');
 
     try {
-      const response = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: loginPassword })
-      });
+      const data = await api.authenticate(loginPassword);
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         sessionStorage.setItem('adminToken', data.token);
         setIsAuthenticated(true);
         setLoginPassword('');
@@ -858,8 +788,7 @@ function App() {
 
   const fetchPendingResources = async () => {
     try {
-      const response = await fetch('/api/resources?status=pending');
-      const data = await response.json();
+      const data = await api.fetchPendingResources();
       setPendingResources(data);
     } catch (error) {
       console.error('Error fetching pending resources:', error);
@@ -868,8 +797,7 @@ function App() {
 
   const fetchMatchupResources = async () => {
     try {
-      const response = await fetch('/api/matchup-queue');
-      const data = await response.json();
+      const data = await api.fetchMatchupQueue();
       setMatchupResources(data);
     } catch (error) {
       console.error('Error fetching matchup resources:', error);
@@ -1627,8 +1555,7 @@ function App() {
 
                               // Fetch all related deck IDs (including variants)
                               try {
-                                const response = await fetch(`/api/deck-matchups?id=${deck.id}`);
-                                const data = await response.json();
+                                const data = await api.fetchDeckMatchups(deck.id);
                                 const allDeckIds = data.relatedDecks?.map(d => d.id) || [deck.id];
                                 setRelatedDeckIds(allDeckIds);
                               } catch (error) {
