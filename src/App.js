@@ -416,19 +416,10 @@ function App() {
     if (!selectedDeck) return;
 
     try {
-      const response = await fetch('/api/resources', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...newResource,
-          deckId: selectedDeck.id
-        })
+      const createdResource = await api.createResource({
+        ...newResource,
+        deckId: selectedDeck.id
       });
-
-      if (response.ok) {
-        const createdResource = await response.json();
 
         // If we have parsed chapters, add them automatically
         if (parsedChapters.length > 0) {
@@ -523,18 +514,12 @@ function App() {
                 }
               }
 
-              await fetch('/api/chapters', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  resourceId: createdResource.id,
-                  timestamp: chapter.timestamp,
-                  title: chapter.title,
-                  chapterType: chapterType,
-                  opposingDeckId: opposingDeckId
-                })
+              await api.createChapter({
+                resourceId: createdResource.id,
+                timestamp: chapter.timestamp,
+                title: chapter.title,
+                chapterType: chapterType,
+                opposingDeckId: opposingDeckId
               });
             }
             console.log(`Added ${parsedChapters.length} chapters to resource`);
@@ -557,19 +542,12 @@ function App() {
         });
         setParsedChapters([]);
 
-        // Refresh the deck to show new resource
-        fetchDeckById(selectedDeck.id);
-      } else if (response.status === 409) {
-        // Duplicate URL
-        const errorData = await response.json();
-        alert(`Duplicate video: "${errorData.existingResourceTitle}" already exists in the database.`);
-      } else {
-        const errorData = await response.json();
-        alert(`Error adding resource: ${errorData.message || errorData.error}`);
-      }
+      // Refresh the deck to show new resource
+      fetchDeckById(selectedDeck.id);
     } catch (error) {
       console.error('Error adding resource:', error);
-      alert('Failed to add resource');
+      // The API service will throw errors with response data
+      alert(error.message || 'Failed to add resource');
     }
   };
 
@@ -590,31 +568,19 @@ function App() {
         }))
       };
 
-      const response = await fetch('/api/resources', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(cleanedData)
-      });
-
-      if (response.ok) {
-        alert('Resource updated successfully!');
-        setEditingResource(null);
-        // Refresh the appropriate view
-        if (selectedDeck) {
-          fetchDeckById(selectedDeck.id);
-        } else if (selectedAuthor) {
-          fetchAuthorBySlug(selectedAuthor.slug);
-        } else {
-          // On homepage, refresh pending resources if needed
-          if (currentView === 'admin') {
-            fetchPendingResources();
-          }
-        }
+      await api.updateResource(cleanedData);
+      alert('Resource updated successfully!');
+      setEditingResource(null);
+      // Refresh the appropriate view
+      if (selectedDeck) {
+        fetchDeckById(selectedDeck.id);
+      } else if (selectedAuthor) {
+        fetchAuthorBySlug(selectedAuthor.slug);
       } else {
-        const errorData = await response.json();
-        alert(`Failed to update resource: ${errorData.error || 'Unknown error'}`);
+        // On homepage, refresh pending resources if needed
+        if (currentView === 'admin') {
+          fetchPendingResources();
+        }
       }
     } catch (error) {
       console.error('Error updating resource:', error);
@@ -822,29 +788,16 @@ function App() {
 
       console.log('Approving resource:', resourceId, cleanedData);
 
-      const response = await fetch('/api/resources', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          id: resourceId,
-          ...cleanedData,
-          status: 'approved'
-        })
+      await api.updateResource({
+        id: resourceId,
+        ...cleanedData,
+        status: 'approved'
       });
-
-      if (response.ok) {
-        alert('Resource approved successfully!');
-        setEditingResource(null);
-        await fetchPendingResources();
-        if (selectedDeck) {
-          fetchDeckById(selectedDeck.id);
-        }
-      } else {
-        const errorData = await response.json();
-        console.error('Failed to approve resource:', errorData);
-        alert(`Failed to approve resource: ${errorData.error || 'Unknown error'}`);
+      alert('Resource approved successfully!');
+      setEditingResource(null);
+      await fetchPendingResources();
+      if (selectedDeck) {
+        fetchDeckById(selectedDeck.id);
       }
     } catch (error) {
       console.error('Error approving resource:', error);
@@ -2810,29 +2763,21 @@ function App() {
                         }
                         setFetchingYouTube(true);
                         try {
-                          const response = await fetch('/api/youtube', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ url: newResource.url })
+                          const data = await api.fetchYouTubeMetadata(newResource.url);
+                          // Auto-detect Tierlist type if "tier list" is in the title
+                          const isTierlist = (data.title || '').toLowerCase().includes('tier list');
+                          setNewResource({
+                            ...newResource,
+                            title: data.title || '',
+                            author: data.author || '',
+                            thumbnail: data.thumbnail || '',
+                            publicationDate: data.publishedAt ? data.publishedAt.split('T')[0] : '',
+                            type: isTierlist ? 'Tierlist' : newResource.type
                           });
-                          const data = await response.json();
-                          if (response.ok) {
-                            // Auto-detect Tierlist type if "tier list" is in the title
-                            const isTierlist = (data.title || '').toLowerCase().includes('tier list');
-                            setNewResource({
-                              ...newResource,
-                              title: data.title || '',
-                              author: data.author || '',
-                              thumbnail: data.thumbnail || '',
-                              publicationDate: data.publishedAt ? data.publishedAt.split('T')[0] : '',
-                              type: isTierlist ? 'Tierlist' : newResource.type
-                            });
-                            setParsedChapters(data.chapters || []);
-                          } else {
-                            alert(`Error: ${data.error}`);
-                          }
+                          setParsedChapters(data.chapters || []);
                         } catch (error) {
-                          alert('Failed to fetch YouTube data');
+                          console.error('Error fetching YouTube data:', error);
+                          alert(`Failed to fetch YouTube data: ${error.message}`);
                         } finally {
                           setFetchingYouTube(false);
                         }
@@ -2876,57 +2821,43 @@ function App() {
                     }
 
                     try {
-                      const response = await fetch('/api/resources', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          ...newResource,
-                          deckId: selectedSingleVideoDeck?.id || null
-                        })
+                      const createdResource = await api.createResource({
+                        ...newResource,
+                        deckId: selectedSingleVideoDeck?.id || null
                       });
 
-                      if (response.ok) {
-                        const createdResource = await response.json();
-
-                        // Add chapters if we have them
-                        if (parsedChapters.length > 0) {
-                          for (const chapter of parsedChapters) {
-                            await fetch('/api/chapters', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({
-                                resourceId: createdResource.id,
-                                timestamp: chapter.timestamp,
-                                title: chapter.title,
-                                chapterType: chapter.isMatchup ? 'Matchup' : 'Guide',
-                                opposingDeckId: null
-                              })
-                            });
-                          }
+                      // Add chapters if we have them
+                      if (parsedChapters.length > 0) {
+                        for (const chapter of parsedChapters) {
+                          await api.createChapter({
+                            resourceId: createdResource.id,
+                            timestamp: chapter.timestamp,
+                            title: chapter.title,
+                            chapterType: chapter.isMatchup ? 'Matchup' : 'Guide',
+                            opposingDeckId: null
+                          });
                         }
-
-                        alert('Video added successfully!');
-                        // Reset form
-                        setNewResource({
-                          type: 'Guide',
-                          title: '',
-                          url: '',
-                          author: '',
-                          platform: 'YouTube',
-                          accessType: 'Free',
-                          publicationDate: '',
-                          thumbnail: '',
-                          decklist: ''
-                        });
-                        setSelectedSingleVideoDeck(null);
-                        setSingleVideoDeckSearch('');
-                        setParsedChapters([]);
-                      } else {
-                        const error = await response.json();
-                        alert(`Error: ${error.error}`);
                       }
+
+                      alert('Video added successfully!');
+                      // Reset form
+                      setNewResource({
+                        type: 'Guide',
+                        title: '',
+                        url: '',
+                        author: '',
+                        platform: 'YouTube',
+                        accessType: 'Free',
+                        publicationDate: '',
+                        thumbnail: '',
+                        decklist: ''
+                      });
+                      setSelectedSingleVideoDeck(null);
+                      setSingleVideoDeckSearch('');
+                      setParsedChapters([]);
                     } catch (error) {
-                      alert('Failed to add video');
+                      console.error('Error adding video:', error);
+                      alert(`Failed to add video: ${error.message}`);
                     }
                   }}
                   className="btn btn-primary"
@@ -3078,38 +3009,26 @@ function App() {
                       const slug = metafyGuide.author.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
                       // Check if author exists
-                      const authorsResponse = await fetch('/api/authors');
-                      const authors = await authorsResponse.json();
+                      const authors = await api.fetchAuthors();
                       let author = authors.find(a => a.slug === slug);
                       let authorId = null;
 
                       if (!author) {
                         // Create new author with Metafy link
-                        const createAuthorResponse = await fetch('/api/authors', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            name: metafyGuide.author,
-                            metafy: metafyGuide.url.includes('metafy.gg/@') ?
-                              metafyGuide.url.substring(0, metafyGuide.url.indexOf('/guide')) || metafyGuide.url :
-                              null
-                          })
+                        author = await api.createAuthor({
+                          name: metafyGuide.author,
+                          metafy: metafyGuide.url.includes('metafy.gg/@') ?
+                            metafyGuide.url.substring(0, metafyGuide.url.indexOf('/guide')) || metafyGuide.url :
+                            null
                         });
-                        if (createAuthorResponse.ok) {
-                          author = await createAuthorResponse.json();
-                          authorId = author.id;
-                        }
+                        authorId = author.id;
                       } else {
                         authorId = author.id;
                         // Update author with Metafy URL if not set
                         if (!author.metafy && metafyGuide.url.includes('metafy.gg/@')) {
-                          await fetch('/api/authors', {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              id: author.id,
-                              metafy: metafyGuide.url.substring(0, metafyGuide.url.indexOf('/guide')) || metafyGuide.url
-                            })
+                          await api.updateAuthor({
+                            id: author.id,
+                            metafy: metafyGuide.url.substring(0, metafyGuide.url.indexOf('/guide')) || metafyGuide.url
                           });
                         }
                       }
@@ -3128,31 +3047,21 @@ function App() {
                         publicationDate: metafyGuide.publicationDate || null
                       };
 
-                      const response = await fetch('/api/resources', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(resourceData)
+                      await api.createResource(resourceData);
+                      alert('Metafy guide added successfully!');
+                      // Reset form
+                      setMetafyGuide({
+                        title: '',
+                        url: '',
+                        author: '',
+                        deckId: null,
+                        publicationDate: '',
+                        price: ''
                       });
-
-                      if (response.ok) {
-                        alert('Metafy guide added successfully!');
-                        // Reset form
-                        setMetafyGuide({
-                          title: '',
-                          url: '',
-                          author: '',
-                          deckId: null,
-                          publicationDate: '',
-                          price: ''
-                        });
-                        setMetafyGuideDeckSearch('');
-                        setSelectedMetafyGuideDeck(null);
-                        // Refresh paid guides list
-                        fetchPaidGuidesResources();
-                      } else {
-                        const error = await response.json();
-                        alert(`Error: ${error.error || 'Failed to add guide'}`);
-                      }
+                      setMetafyGuideDeckSearch('');
+                      setSelectedMetafyGuideDeck(null);
+                      // Refresh paid guides list
+                      fetchPaidGuidesResources();
                     } catch (error) {
                       console.error('Error adding Metafy guide:', error);
                       alert('Failed to add Metafy guide');
@@ -3662,24 +3571,17 @@ function App() {
                                   }}
                                   onClick={async () => {
                                     try {
-                                      const response = await fetch('/api/resources', {
-                                        method: 'PUT',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({
-                                          ...guide,
-                                          deckId: deck.id
-                                        })
+                                      await api.updateResource({
+                                        ...guide,
+                                        deckId: deck.id
                                       });
-
-                                      if (response.ok) {
-                                        setEditingGuideDeck({ ...editingGuideDeck, [guide.id]: deck.name });
-                                        setShowGuideDeckDropdown(null);
-                                        fetchPaidGuidesResources(); // Refresh the list
-                                        alert(`Successfully assigned "${guide.title}" to ${deck.name}`);
-                                      }
+                                      setEditingGuideDeck({ ...editingGuideDeck, [guide.id]: deck.name });
+                                      setShowGuideDeckDropdown(null);
+                                      fetchPaidGuidesResources(); // Refresh the list
+                                      alert(`Successfully assigned "${guide.title}" to ${deck.name}`);
                                     } catch (error) {
                                       console.error('Error assigning deck:', error);
-                                      alert('Failed to assign deck');
+                                      alert(`Failed to assign deck: ${error.message}`);
                                     }
                                   }}
                                 >
@@ -3705,20 +3607,13 @@ function App() {
                               style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}
                               onClick={async () => {
                                 try {
-                                  const response = await fetch('/api/resources', {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                      ...guide,
-                                      deckId: null
-                                    })
+                                  await api.updateResource({
+                                    ...guide,
+                                    deckId: null
                                   });
-
-                                  if (response.ok) {
-                                    setEditingGuideDeck({ ...editingGuideDeck, [guide.id]: '' });
-                                    fetchPaidGuidesResources(); // Refresh the list
-                                    alert(`Removed deck assignment from "${guide.title}"`);
-                                  }
+                                  setEditingGuideDeck({ ...editingGuideDeck, [guide.id]: '' });
+                                  fetchPaidGuidesResources(); // Refresh the list
+                                  alert(`Removed deck assignment from "${guide.title}"`);
                                 } catch (error) {
                                   console.error('Error removing deck:', error);
                                   alert('Failed to remove deck assignment');
@@ -3924,26 +3819,17 @@ function App() {
                             style={{ padding: '0.5rem 1.5rem', fontSize: '0.9rem' }}
                             onClick={async () => {
                               try {
-                                const response = await fetch('/api/authors', {
-                                  method: 'PUT',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({
-                                    id: author.id,
-                                    name: editData.name,
-                                    youtube: editData.youtube || null,
-                                    metafy: editData.metafy || null
-                                  })
+                                await api.updateAuthor({
+                                  id: author.id,
+                                  name: editData.name,
+                                  youtube: editData.youtube || null,
+                                  metafy: editData.metafy || null
                                 });
-
-                                if (response.ok) {
-                                  await fetchAuthors(); // Refresh the list
-                                  alert(`Successfully updated "${editData.name}"`);
-                                } else {
-                                  alert('Failed to update author');
-                                }
+                                await fetchAuthors(); // Refresh the list
+                                alert(`Successfully updated "${editData.name}"`);
                               } catch (error) {
                                 console.error('Error updating author:', error);
-                                alert('Failed to update author');
+                                alert(`Failed to update author: ${error.message}`);
                               }
                             }}
                           >
