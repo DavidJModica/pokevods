@@ -3,14 +3,15 @@ import './App.css';
 import HostedGuidesAdmin from './components/HostedGuidesAdmin';
 import GuideEditorStandalone from './components/GuideEditorStandalone';
 import {
-  MEGA_EVOLUTIONS_FORMAT_DATE,
   DEFAULT_RESOURCE_TYPE_FILTERS,
   DEFAULT_ACCESS_TYPE_FILTERS,
   DEFAULT_PLATFORM_FILTERS
 } from './constants';
 import { getYouTubeTimestampedURL } from './utils/youtube';
 import { sortChaptersByTime } from './utils/format';
-import { getPlatformIcon } from './utils/icons';
+import { getPlatformIcon, parseIconsArray } from './utils/icons';
+import { normalizeForMatching, sortDecksByResourceCount } from './utils/deckUtils';
+import { formatPublicationDate, formatDateForInput, isResourceOutOfDate } from './utils/dateUtils';
 import * as api from './services/api';
 
 function App() {
@@ -287,12 +288,7 @@ function App() {
 
   // Get sorted decks
   const getSortedDecks = () => {
-    // Sort by resource count (highest first)
-    return [...decks].sort((a, b) => {
-      const aCount = a.resources?.length || 0;
-      const bCount = b.resources?.length || 0;
-      return bCount - aCount;
-    });
+    return sortDecksByResourceCount(decks);
   };
 
   const handleAddDeck = async (e) => {
@@ -342,8 +338,7 @@ function App() {
       // Format the publication date for the date input (YYYY-MM-DD)
       let formattedDate = newResource.publicationDate;
       if (data.publicationDate) {
-        const date = new Date(data.publicationDate);
-        formattedDate = date.toISOString().split('T')[0];
+        formattedDate = formatDateForInput(data.publicationDate);
       }
 
       // If we have author name and channel URL, update or create the author profile
@@ -433,15 +428,6 @@ function App() {
                 chapterType = 'Matchup';
 
                 const opponentNameLower = chapter.opposingDeckName.toLowerCase();
-
-                // Normalize names by removing "ex" and extra spaces for matching
-                const normalizeForMatching = (name) => {
-                  return name.toLowerCase()
-                    .replace(/\s+ex\b/g, '') // Remove " ex" suffix
-                    .replace(/\b(ethan's|misty's|rocket's|iono's|lillie's)\s+/gi, '') // Remove trainer prefixes
-                    .replace(/\s+/g, ' ') // Normalize spaces
-                    .trim();
-                };
 
                 const normalizedOpponent = normalizeForMatching(opponentNameLower);
 
@@ -905,7 +891,7 @@ function App() {
             {selectedAuthor.resources && selectedAuthor.resources.length > 0 ? (
               <div className="resources-list">
                 {selectedAuthor.resources.map(resource => {
-                  const icons = resource.deck?.icons ? JSON.parse(resource.deck.icons) : [];
+                  const icons = parseIconsArray(resource.deck);
                   return (
                     <div key={resource.id} className="resource-card">
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
@@ -945,7 +931,7 @@ function App() {
                               )}
                               <div style={{ fontSize: '0.9rem', color: '#666' }}>
                                 {resource.type} • {resource.platform}
-                                {resource.publicationDate && new Date(resource.publicationDate) < MEGA_EVOLUTIONS_FORMAT_DATE && (
+                                {isResourceOutOfDate(resource) && (
                                   <span style={{
                                     marginLeft: '0.5rem',
                                     padding: '0.125rem 0.5rem',
@@ -1002,7 +988,7 @@ function App() {
                         <div className="chapters-list">
                           <strong>Chapters:</strong>
                           {resource.chapters.map((chapter, idx) => {
-                            const chapterIcons = chapter.opposingDeck?.icons ? JSON.parse(chapter.opposingDeck.icons) : [];
+                            const chapterIcons = parseIconsArray(chapter.opposingDeck);
                             return (
                               <div key={idx} className="chapter-item">
                                 <a
@@ -1067,7 +1053,7 @@ function App() {
                           .filter(deck => deck.name.toLowerCase().includes(editDeckSearch.toLowerCase()))
                           .slice(0, 10)
                           .map(deck => {
-                            const icons = deck.icons ? JSON.parse(deck.icons) : [];
+                            const icons = parseIconsArray(deck);
                             return (
                               <div
                                 key={deck.id}
@@ -1273,13 +1259,10 @@ function App() {
                                           }}
                                         >
                                           <div className="deck-icons-group">
-                                            {deck.icons ? (
-                                              JSON.parse(deck.icons).slice(0, 2).map((iconPath, idx) => (
-                                                <img key={idx} src={iconPath} alt="" className="deck-search-icon" />
-                                              ))
-                                            ) : deck.icon ? (
-                                              <img src={deck.icon} alt="" className="deck-search-icon" />
-                                            ) : (
+                                            {parseIconsArray(deck).slice(0, 2).map((iconPath, idx) => (
+                                              <img key={idx} src={iconPath} alt="" className="deck-search-icon" />
+                                            ))}
+                                            {parseIconsArray(deck).length === 0 && (
                                               <div className="deck-search-icon-placeholder">?</div>
                                             )}
                                           </div>
@@ -1401,7 +1384,7 @@ function App() {
                 </button>
                 <button
                   onClick={() => {
-                    const icons = selectedDeck.icons ? JSON.parse(selectedDeck.icons) : [];
+                    const icons = parseIconsArray(selectedDeck);
                     setEditingDeck({
                       id: selectedDeck.id,
                       name: selectedDeck.name,
@@ -1494,7 +1477,7 @@ function App() {
                       )
                       .slice(0, 10)
                       .map(deck => {
-                        const icons = deck.icons ? JSON.parse(deck.icons) : [];
+                        const icons = parseIconsArray(deck);
                         // Check if this deck has variants (is a base deck)
                         const hasVariants = !deck.variantOf && decks.some(d => d.variantOf === deck.name);
                         return (
@@ -1766,7 +1749,7 @@ function App() {
                     const platform = (resource.platform === 'YouTube' || resource.platform === 'Metafy') ? resource.platform : 'Other';
                     if (!platformFilters[platform]) return false;
                     // Filter by out-of-date status
-                    const isOutOfDate = resource.publicationDate && new Date(resource.publicationDate) < MEGA_EVOLUTIONS_FORMAT_DATE;
+                    const isOutOfDate = isResourceOutOfDate(resource);
                     if (!showOutOfDate && isOutOfDate) return false;
                     return true;
                   })
@@ -1798,7 +1781,7 @@ function App() {
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                               <button
                                 onClick={() => {
-                                  const pubDate = resource.publicationDate ? new Date(resource.publicationDate).toISOString().split('T')[0] : '';
+                                  const pubDate = resource.publicationDate ? formatDateForInput(resource.publicationDate) : '';
                                   setEditingResource({
                                     id: resource.id,
                                     type: resource.type,
@@ -1850,7 +1833,7 @@ function App() {
                               {getPlatformIcon(resource.platform)} {resource.platform}
                             </span>
                           )}
-                          {resource.publicationDate && new Date(resource.publicationDate) < MEGA_EVOLUTIONS_FORMAT_DATE && (
+                          {isResourceOutOfDate(resource) && (
                             <span style={{
                               padding: '0.125rem 0.5rem',
                               backgroundColor: '#ffc107',
@@ -1864,7 +1847,7 @@ function App() {
                           )}
                           {resource.publicationDate && (
                             <span className="pub-date">
-                              📅 {new Date(resource.publicationDate).toLocaleDateString()}
+                              📅 {formatPublicationDate(resource.publicationDate)}
                             </span>
                           )}
                         </div>
@@ -1879,7 +1862,7 @@ function App() {
                                   .filter(c => c.chapterType === 'Matchup' && c.opposingDeck)
                                   .map(c => [c.opposingDeck.id, c.opposingDeck])
                               ).values()].map(deck => {
-                                const icons = deck.icons ? JSON.parse(deck.icons) : [];
+                                const icons = parseIconsArray(deck);
                                 return (
                                   <div key={deck.id} className="matchup-deck-item" title={deck.name}>
                                     {icons.length > 0 ? (
@@ -2058,13 +2041,10 @@ function App() {
                                             }}
                                           >
                                             <div className="deck-icons-group">
-                                              {deck.icons ? (
-                                                JSON.parse(deck.icons).slice(0, 2).map((iconPath, idx) => (
-                                                  <img key={idx} src={iconPath} alt="" className="deck-search-icon" />
-                                                ))
-                                              ) : deck.icon ? (
-                                                <img src={deck.icon} alt="" className="deck-search-icon" />
-                                              ) : (
+                                              {parseIconsArray(deck).slice(0, 2).map((iconPath, idx) => (
+                                                <img key={idx} src={iconPath} alt="" className="deck-search-icon" />
+                                              ))}
+                                              {parseIconsArray(deck).length === 0 && (
                                                 <div className="deck-search-icon-placeholder">?</div>
                                               )}
                                             </div>
@@ -2697,7 +2677,7 @@ function App() {
                         .filter(deck => deck.name.toLowerCase().includes(singleVideoDeckSearch.toLowerCase()))
                         .slice(0, 10)
                         .map(deck => {
-                          const icons = deck.icons ? JSON.parse(deck.icons) : [];
+                          const icons = parseIconsArray(deck);
                           return (
                             <div
                               key={deck.id}
@@ -2893,7 +2873,7 @@ function App() {
                         .filter(deck => deck.name.toLowerCase().includes(metafyGuideDeckSearch.toLowerCase()))
                         .slice(0, 10)
                         .map(deck => {
-                          const icons = deck.icons ? JSON.parse(deck.icons) : [];
+                          const icons = parseIconsArray(deck);
                           return (
                             <div
                               key={deck.id}
@@ -3516,7 +3496,7 @@ function App() {
                         </div>
                         <div style={{ fontSize: '0.9rem', color: '#666' }}>
                           {guide.platform} • {guide.authorProfile?.name || guide.author}
-                          {guide.publicationDate && ` • ${new Date(guide.publicationDate).toLocaleDateString()}`}
+                          {guide.publicationDate && ` • ${formatPublicationDate(guide.publicationDate)}`}
                         </div>
                         <div style={{ fontSize: '0.85rem', color: '#999', marginTop: '0.25rem' }}>
                           <a href={guide.url} target="_blank" rel="noopener noreferrer">{guide.url}</a>
@@ -3559,7 +3539,7 @@ function App() {
                             marginTop: '0.25rem'
                           }}>
                             {filteredDecks.map(deck => {
-                              const icons = deck.icons ? JSON.parse(deck.icons) : (deck.icon ? [deck.icon] : []);
+                              const icons = parseIconsArray(deck);
                               return (
                                 <div
                                   key={deck.id}
@@ -3926,7 +3906,7 @@ function App() {
                           .filter(deck => deck.name.toLowerCase().includes(editDeckSearch.toLowerCase()))
                           .slice(0, 10)
                           .map(deck => {
-                            const icons = deck.icons ? JSON.parse(deck.icons) : [];
+                            const icons = parseIconsArray(deck);
                             return (
                               <div
                                 key={deck.id}
@@ -4132,13 +4112,10 @@ function App() {
                                           }}
                                         >
                                           <div className="deck-icons-group">
-                                            {deck.icons ? (
-                                              JSON.parse(deck.icons).slice(0, 2).map((iconPath, idx) => (
-                                                <img key={idx} src={iconPath} alt="" className="deck-search-icon" />
-                                              ))
-                                            ) : deck.icon ? (
-                                              <img src={deck.icon} alt="" className="deck-search-icon" />
-                                            ) : (
+                                            {parseIconsArray(deck).slice(0, 2).map((iconPath, idx) => (
+                                              <img key={idx} src={iconPath} alt="" className="deck-search-icon" />
+                                            ))}
+                                            {parseIconsArray(deck).length === 0 && (
                                               <div className="deck-search-icon-placeholder">?</div>
                                             )}
                                           </div>
@@ -4288,7 +4265,7 @@ function App() {
                   )
                   .slice(0, 10)
                   .map(deck => {
-                    const icons = deck.icons ? JSON.parse(deck.icons) : (deck.icon ? [deck.icon] : []);
+                    const icons = parseIconsArray(deck);
                     return (
                       <div
                         key={deck.id}
@@ -4431,7 +4408,7 @@ function App() {
                   <span className="deck-list-name">{resource.title}</span>
                   <span className="deck-list-meta">
                     {resource.authorProfile?.name || resource.author}
-                    {resource.publicationDate && ` • ${new Date(resource.publicationDate).toLocaleDateString()}`}
+                    {resource.publicationDate && ` • ${formatPublicationDate(resource.publicationDate)}`}
                   </span>
                 </div>
               </a>
@@ -4453,7 +4430,7 @@ function App() {
             {getSortedDecks()
               .filter(deck => showAdmin || (deck.resources && deck.resources.length > 0))
               .map(deck => {
-              const icons = deck.icons ? JSON.parse(deck.icons) : (deck.icon ? [deck.icon] : []);
+              const icons = parseIconsArray(deck);
               return (
                 <div
                   key={deck.id}
@@ -4510,7 +4487,7 @@ function App() {
                     </span>
                     <span className="deck-list-meta">
                       {resource.platform} • {resource.authorProfile?.name || resource.author}
-                      {resource.publicationDate && ` • ${new Date(resource.publicationDate).toLocaleDateString()}`}
+                      {resource.publicationDate && ` • ${formatPublicationDate(resource.publicationDate)}`}
                     </span>
                   </div>
                 </a>

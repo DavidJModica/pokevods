@@ -12,3 +12,22 @@ export const getPlatformIcon = (platform) => {
     default: return '🌐';
   }
 };
+
+/**
+ * Safely parses deck icons from JSON string
+ * @param {Object} deck - Deck object with icons property
+ * @returns {Array} Array of icon strings
+ */
+export const parseIconsArray = (deck) => {
+  if (!deck) return [];
+  if (deck.icons) {
+    try {
+      const parsed = JSON.parse(deck.icons);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  if (deck.icon) return [deck.icon];
+  return [];
+};
