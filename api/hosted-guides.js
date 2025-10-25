@@ -307,7 +307,7 @@ module.exports = async function handler(req, res) {
                   const sectionData = {
                     sectionType: section.type,
                     title: sanitizePlainText(section.title),
-                    content: sanitizeGuideContent(section.content || '',
+                    content: sanitizeGuideContent(section.content || ''),
                     order: section.order
                   };
 

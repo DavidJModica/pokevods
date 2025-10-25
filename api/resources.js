@@ -1,16 +1,17 @@
 const prisma = require('../lib/prisma');
+const { verifyToken } = require('../lib/authMiddleware');
+const { setCorsHeaders, handleCorsPreflight } = require('../lib/corsHelper');
+const { validateId, validateIds, validateString, validateUrl } = require('../lib/validation');
 
 module.exports = async function handler(req, res) {
   const { method } = req;
 
-  // Set CORS headers for all requests
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  // Set secure CORS headers
+  setCorsHeaders(req, res);
 
   // Handle CORS preflight
-  if (method === 'OPTIONS') {
-    return res.status(200).end();
+  if (handleCorsPreflight(req, res)) {
+    return;
   }
 
   try {
@@ -61,10 +62,17 @@ module.exports = async function handler(req, res) {
           return res.status(200).json(resource);
         }
 
-        // Get pending resources (for review queue)
+        // Get pending resources (for review queue) - ADMIN ONLY
         if (status === 'pending') {
-          const pendingResources = await prisma.resource.findMany({
-            where: { status: 'pending' },
+          // Require authentication to view pending resources
+          return verifyToken(req, res, async () => {
+            // Only admins can view pending resources
+            if (req.user.role !== 'admin') {
+              return res.status(403).json({ error: 'Unauthorized - admin access required to view pending resources' });
+            }
+
+            const pendingResources = await prisma.resource.findMany({
+              where: { status: 'pending' },
             include: {
               deck: {
                 select: {
@@ -94,8 +102,9 @@ module.exports = async function handler(req, res) {
               }
             },
             orderBy: { createdAt: 'desc' }
+            });
+            return res.status(200).json(pendingResources);
           });
-          return res.status(200).json(pendingResources);
         }
 
         // Get resources by type or accessType (for homepage sections)
@@ -358,15 +367,26 @@ module.exports = async function handler(req, res) {
       }
 
       case 'DELETE': {
-        const { id } = req.query;
+        // Require admin authentication for deletion
+        return verifyToken(req, res, async () => {
+          // Only admins can delete
+          if (req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Unauthorized - admin access required' });
+          }
 
-        if (!id) {
-          return res.status(400).json({ error: 'Resource ID is required' });
-        }
+          const { id } = req.query;
 
-        // Get the resource details before deleting
-        const resource = await prisma.resource.findUnique({
-          where: { id: parseInt(id) },
+          // Validate ID
+          let resourceId;
+          try {
+            resourceId = validateId(id, 'Resource ID');
+          } catch (error) {
+            return res.status(400).json({ error: error.message });
+          }
+
+          // Get the resource details before deleting
+          const resource = await prisma.resource.findUnique({
+          where: { id: resourceId },
           select: {
             id: true,
             url: true,
@@ -398,13 +418,14 @@ module.exports = async function handler(req, res) {
           // Continue with deletion even if reject tracking fails
         }
 
-        // Delete the resource
-        await prisma.resource.delete({
-          where: { id: parseInt(id) }
-        });
+          // Delete the resource
+          await prisma.resource.delete({
+            where: { id: resourceId }
+          });
 
-        return res.status(200).json({
-          message: 'Resource deleted and will not be re-added in future scans'
+          return res.status(200).json({
+            message: 'Resource deleted and will not be re-added in future scans'
+          });
         });
       }
 

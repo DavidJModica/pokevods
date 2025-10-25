@@ -25,6 +25,16 @@ module.exports = async function handler(req, res) {
   try {
     switch (action) {
       case 'login': {
+        // Check rate limit to prevent brute force attacks
+        const rateLimit = checkRateLimit(req);
+        if (!rateLimit.allowed) {
+          return res.status(429).json({
+            success: false,
+            error: rateLimit.message,
+            retryAfter: rateLimit.retryAfter
+          });
+        }
+
         const { email, password } = req.body;
 
         if (!email || !password) {
@@ -37,6 +47,8 @@ module.exports = async function handler(req, res) {
         });
 
         if (!author || !author.password) {
+          // Add delay to prevent timing attacks
+          await new Promise(resolve => setTimeout(resolve, 1000));
           return res.status(401).json({
             success: false,
             error: 'Invalid email or password'
@@ -47,11 +59,16 @@ module.exports = async function handler(req, res) {
         const isValid = await bcrypt.compare(password, author.password);
 
         if (!isValid) {
+          // Add delay to prevent timing attacks
+          await new Promise(resolve => setTimeout(resolve, 1000));
           return res.status(401).json({
             success: false,
             error: 'Invalid email or password'
           });
         }
+
+        // Reset rate limit on successful login
+        recordSuccessfulLogin(req);
 
         // Generate token
         const token = generateAuthorToken(author, '7d');
@@ -72,6 +89,16 @@ module.exports = async function handler(req, res) {
       }
 
       case 'register': {
+        // Check rate limit to prevent spam registrations
+        const rateLimit = checkRateLimit(req);
+        if (!rateLimit.allowed) {
+          return res.status(429).json({
+            success: false,
+            error: rateLimit.message,
+            retryAfter: rateLimit.retryAfter
+          });
+        }
+
         const { name, email, password } = req.body;
 
         if (!name || !email || !password) {

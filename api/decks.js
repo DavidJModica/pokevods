@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma');
+const { verifyToken } = require('../lib/authMiddleware');
 
 module.exports = async function handler(req, res) {
   const { method } = req;
@@ -162,17 +163,25 @@ module.exports = async function handler(req, res) {
       }
 
       case 'DELETE': {
-        const { id: deleteId } = req.query;
+        // Require admin authentication for deletion
+        return verifyToken(req, res, async () => {
+          // Only admins can delete
+          if (req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Unauthorized - admin access required' });
+          }
 
-        if (!deleteId) {
-          return res.status(400).json({ error: 'Deck ID is required' });
-        }
+          const { id: deleteId } = req.query;
 
-        await prisma.deck.delete({
-          where: { id: parseInt(deleteId) }
+          if (!deleteId) {
+            return res.status(400).json({ error: 'Deck ID is required' });
+          }
+
+          await prisma.deck.delete({
+            where: { id: parseInt(deleteId) }
+          });
+
+          return res.status(200).json({ message: 'Deck deleted successfully' });
         });
-
-        return res.status(200).json({ message: 'Deck deleted successfully' });
       }
 
       default:
