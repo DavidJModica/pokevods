@@ -72,4 +72,4 @@ export const DEFAULT_PLATFORM_FILTERS = {
 };
 
 // Version
-export const APP_VERSION = '0.1.19';
+export const APP_VERSION = '0.1.20';

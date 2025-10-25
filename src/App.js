@@ -205,8 +205,7 @@ function App() {
   // eslint-disable-next-line no-unused-vars
   const fetchTierListResources = async () => {
     try {
-      const response = await fetch('/api/resources?type=Tierlist');
-      const data = await response.json();
+      const data = await api.fetchResourcesByType('Tierlist');
       // Sort by publication date, newest first
       const sorted = data.sort((a, b) => {
         const dateA = a.publicationDate ? new Date(a.publicationDate) : new Date(0);
@@ -222,8 +221,7 @@ function App() {
   // eslint-disable-next-line no-unused-vars
   const fetchTournamentResources = async () => {
     try {
-      const response = await fetch('/api/resources?type=Tournament%20Report');
-      const data = await response.json();
+      const data = await api.fetchResourcesByType('Tournament Report');
       // Sort by publication date, newest first
       const sorted = data.sort((a, b) => {
         const dateA = a.publicationDate ? new Date(a.publicationDate) : new Date(0);
@@ -238,8 +236,7 @@ function App() {
 
   const fetchPaidGuidesResources = async () => {
     try {
-      const response = await fetch('/api/resources?accessType=Paid');
-      const data = await response.json();
+      const data = await api.fetchResourcesByAccessType('Paid');
       // Sort by publication date, newest first
       const sorted = data.sort((a, b) => {
         const dateA = a.publicationDate ? new Date(a.publicationDate) : new Date(0);
@@ -253,8 +250,7 @@ function App() {
   };
   const fetchAuthors = async () => {
     try {
-      const response = await fetch('/api/authors');
-      const data = await response.json();
+      const data = await api.fetchAuthors();
       setAuthors(data);
     } catch (error) {
       console.error('Error fetching authors:', error);
@@ -263,8 +259,7 @@ function App() {
 
   const fetchGuideVideosResources = async () => {
     try {
-      const response = await fetch('/api/guide-videos');
-      const data = await response.json();
+      const data = await api.fetchGuideVideos();
       setGuideVideosResources(data);
     } catch (error) {
       console.error('Error fetching guide videos:', error);
@@ -273,8 +268,7 @@ function App() {
 
   const fetchDeckById = async (id) => {
     try {
-      const response = await fetch(`/api/decks?id=${id}`);
-      const data = await response.json();
+      const data = await api.fetchDeckById(id);
       setSelectedDeck(data);
     } catch (error) {
       console.error('Error fetching deck:', error);
@@ -283,8 +277,7 @@ function App() {
 
   const fetchAuthorBySlug = async (slug) => {
     try {
-      const response = await fetch(`/api/authors?slug=${slug}`);
-      const data = await response.json();
+      const data = await api.fetchAuthorBySlug(slug);
       setSelectedAuthor(data);
       setCurrentView('author');
     } catch (error) {
@@ -306,27 +299,18 @@ function App() {
     e.preventDefault();
 
     try {
-      const response = await fetch('/api/decks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newDeck)
+      await api.createDeck(newDeck);
+      setShowAddDeck(false);
+      setNewDeck({
+        name: '',
+        archetype: '',
+        format: 'Standard',
+        description: '',
+        deckList: '',
+        icon1: '',
+        icon2: ''
       });
-
-      if (response.ok) {
-        setShowAddDeck(false);
-        setNewDeck({
-          name: '',
-          archetype: '',
-          format: 'Standard',
-          description: '',
-          deckList: '',
-          icon1: '',
-          icon2: ''
-        });
-        fetchDecks();
-      }
+      fetchDecks();
     } catch (error) {
       console.error('Error adding deck:', error);
     }
@@ -336,19 +320,10 @@ function App() {
     e.preventDefault();
 
     try {
-      const response = await fetch('/api/decks', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(editingDeck)
-      });
-
-      if (response.ok) {
-        setEditingDeck(null);
-        // Refresh the deck data
-        fetchDeckById(editingDeck.id);
-      }
+      await api.updateDeck(editingDeck);
+      setEditingDeck(null);
+      // Refresh the deck data
+      fetchDeckById(editingDeck.id);
     } catch (error) {
       console.error('Error updating deck:', error);
     }
