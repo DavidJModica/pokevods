@@ -12,6 +12,9 @@ import { sortChaptersByTime } from './utils/format';
 import { getPlatformIcon, parseIconsArray } from './utils/icons';
 import { normalizeForMatching, sortDecksByResourceCount } from './utils/deckUtils';
 import { formatPublicationDate, formatDateForInput, isResourceOutOfDate } from './utils/dateUtils';
+import { includesIgnoreCase, filterByMultipleFields } from './utils/stringUtils';
+import { normalizePlatform, filterResources, getUniqueDeckMatchups, countBulkImportResults } from './utils/resourceUtils';
+import { isEmpty, isValidUrl, isYouTubeUrl, isMetafyUrl } from './utils/validation';
 import * as api from './services/api';
 
 function App() {
@@ -641,7 +644,7 @@ function App() {
   const handleBulkImport = async (e) => {
     e.preventDefault();
 
-    if (!bulkImportSource.trim()) {
+    if (isEmpty(bulkImportSource)) {
       alert('Please enter a YouTube channel, playlist URL, or video URLs');
       return;
     }
@@ -658,10 +661,7 @@ function App() {
 
       setImportResults(data);
 
-      const approvedCount = data.results.filter(r => r.success && r.status === 'approved').length;
-      const pendingCount = data.results.filter(r => r.success && r.status === 'pending').length;
-      const failedCount = data.results.filter(r => !r.success).length;
-      const noDeckCount = data.results.filter(r => !r.success && r.needsManualDeck).length;
+      const { approved: approvedCount, pending: pendingCount, failed: failedCount, noDeck: noDeckCount } = countBulkImportResults(data.results);
 
       alert(`Bulk import complete!\n\nApproved: ${approvedCount}\nPending Review: ${pendingCount}\nNo Deck Detected: ${noDeckCount}\nFailed: ${failedCount - noDeckCount}`);
 
@@ -1050,7 +1050,7 @@ function App() {
                     {showEditDeckDropdown && editDeckSearch && (
                       <div className="deck-search-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000 }}>
                         {decks
-                          .filter(deck => deck.name.toLowerCase().includes(editDeckSearch.toLowerCase()))
+                          .filter(deck => includesIgnoreCase(deck.name, editDeckSearch))
                           .slice(0, 10)
                           .map(deck => {
                             const icons = parseIconsArray(deck);
@@ -1073,7 +1073,7 @@ function App() {
                               </div>
                             );
                           })}
-                        {decks.filter(deck => deck.name.toLowerCase().includes(editDeckSearch.toLowerCase())).length === 0 && (
+                        {decks.filter(deck => includesIgnoreCase(deck.name, editDeckSearch)).length === 0 && (
                           <div className="deck-search-item" style={{ color: '#999' }}>No decks found</div>
                         )}
                       </div>
@@ -1244,7 +1244,7 @@ function App() {
                                     style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000 }}
                                   >
                                     {decks
-                                      .filter(deck => deck.name.toLowerCase().includes((editResourceChapterDeckSearch[index] || '').toLowerCase()))
+                                      .filter(deck => includesIgnoreCase(deck.name, editResourceChapterDeckSearch[index] || ''))
                                       .slice(0, 10)
                                       .map(deck => (
                                         <div
@@ -1473,7 +1473,7 @@ function App() {
                   <div className="matchup-filter-dropdown deck-search-dropdown">
                     {decks
                       .filter(deck =>
-                        deck.name.toLowerCase().includes(matchupSearch.toLowerCase())
+                        includesIgnoreCase(deck.name, matchupSearch)
                       )
                       .slice(0, 10)
                       .map(deck => {
@@ -2027,7 +2027,7 @@ function App() {
                                     <div className="deck-search-dropdown">
                                       {decks
                                         .filter(deck =>
-                                          deck.name.toLowerCase().includes(deckSearch.toLowerCase())
+                                          includesIgnoreCase(deck.name, deckSearch)
                                         )
                                         .slice(0, 10)
                                         .map(deck => (
@@ -2231,7 +2231,7 @@ function App() {
                   {showEditChapterDeckDropdown && editChapterDeckSearch && (
                     <div className="deck-search-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000 }}>
                       {decks
-                        .filter(deck => deck.name.toLowerCase().includes(editChapterDeckSearch.toLowerCase()))
+                        .filter(deck => includesIgnoreCase(deck.name, editChapterDeckSearch))
                         .slice(0, 10)
                         .map(deck => (
                           <div
@@ -2246,7 +2246,7 @@ function App() {
                             {deck.name}
                           </div>
                         ))}
-                      {decks.filter(deck => deck.name.toLowerCase().includes(editChapterDeckSearch.toLowerCase())).length === 0 && (
+                      {decks.filter(deck => includesIgnoreCase(deck.name, editChapterDeckSearch)).length === 0 && (
                         <div className="deck-search-item" style={{ color: '#999' }}>No decks found</div>
                       )}
                     </div>
@@ -2674,7 +2674,7 @@ function App() {
                   {showSingleVideoDeckDropdown && singleVideoDeckSearch && (
                     <div className="deck-search-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000 }}>
                       {decks
-                        .filter(deck => deck.name.toLowerCase().includes(singleVideoDeckSearch.toLowerCase()))
+                        .filter(deck => includesIgnoreCase(deck.name, singleVideoDeckSearch))
                         .slice(0, 10)
                         .map(deck => {
                           const icons = parseIconsArray(deck);
@@ -2701,7 +2701,7 @@ function App() {
                             </div>
                           );
                         })}
-                      {decks.filter(deck => deck.name.toLowerCase().includes(singleVideoDeckSearch.toLowerCase())).length === 0 && (
+                      {decks.filter(deck => includesIgnoreCase(deck.name, singleVideoDeckSearch)).length === 0 && (
                         <div className="deck-search-item" style={{ color: '#999' }}>No decks found</div>
                       )}
                     </div>
@@ -2870,7 +2870,7 @@ function App() {
                   {showMetafyGuideDeckDropdown && metafyGuideDeckSearch && (
                     <div className="deck-search-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000 }}>
                       {decks
-                        .filter(deck => deck.name.toLowerCase().includes(metafyGuideDeckSearch.toLowerCase()))
+                        .filter(deck => includesIgnoreCase(deck.name, metafyGuideDeckSearch))
                         .slice(0, 10)
                         .map(deck => {
                           const icons = parseIconsArray(deck);
@@ -2898,7 +2898,7 @@ function App() {
                             </div>
                           );
                         })}
-                      {decks.filter(deck => deck.name.toLowerCase().includes(metafyGuideDeckSearch.toLowerCase())).length === 0 && (
+                      {decks.filter(deck => includesIgnoreCase(deck.name, metafyGuideDeckSearch)).length === 0 && (
                         <div className="deck-search-item" style={{ color: '#999' }}>No decks found</div>
                       )}
                     </div>
@@ -3248,31 +3248,33 @@ function App() {
             </button>
           </form>
 
-          {importResults && (
+          {importResults && (() => {
+            const counts = countBulkImportResults(importResults.results);
+            return (
             <div style={{ marginTop: '2rem', border: '1px solid #ddd', padding: '1.5rem', borderRadius: '8px' }}>
               <h3>Import Results</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
                 <div style={{ padding: '1rem', backgroundColor: '#d4edda', borderRadius: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#155724' }}>
-                    {importResults.results.filter(r => r.success && r.status === 'approved').length}
+                    {counts.approved}
                   </div>
                   <div style={{ color: '#155724' }}>Approved</div>
                 </div>
                 <div style={{ padding: '1rem', backgroundColor: '#fff3cd', borderRadius: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#856404' }}>
-                    {importResults.results.filter(r => r.success && r.status === 'pending').length}
+                    {counts.pending}
                   </div>
                   <div style={{ color: '#856404' }}>Pending Review</div>
                 </div>
                 <div style={{ padding: '1rem', backgroundColor: '#f8d7da', borderRadius: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#721c24' }}>
-                    {importResults.results.filter(r => !r.success && r.needsManualDeck).length}
+                    {counts.noDeck}
                   </div>
                   <div style={{ color: '#721c24' }}>No Deck Detected</div>
                 </div>
                 <div style={{ padding: '1rem', backgroundColor: '#f8d7da', borderRadius: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#721c24' }}>
-                    {importResults.results.filter(r => !r.success && !r.needsManualDeck).length}
+                    {counts.failed - counts.noDeck}
                   </div>
                   <div style={{ color: '#721c24' }}>Failed</div>
                 </div>
@@ -3297,7 +3299,8 @@ function App() {
                 ))}
               </div>
             </div>
-          )}
+            );
+          })()}
           </div>
           )}
 
@@ -3463,7 +3466,7 @@ function App() {
                   const currentDeck = decks.find(d => d.id === guide.deckId);
                   const searchValue = editingGuideDeck[guide.id] || currentDeck?.name || '';
                   const filteredDecks = decks.filter(deck =>
-                    deck.name.toLowerCase().includes(searchValue.toLowerCase())
+                    includesIgnoreCase(deck.name, searchValue)
                   ).slice(0, 10);
 
                   return (
@@ -3903,7 +3906,7 @@ function App() {
                     {showEditDeckDropdown && editDeckSearch && (
                       <div className="deck-search-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000 }}>
                         {decks
-                          .filter(deck => deck.name.toLowerCase().includes(editDeckSearch.toLowerCase()))
+                          .filter(deck => includesIgnoreCase(deck.name, editDeckSearch))
                           .slice(0, 10)
                           .map(deck => {
                             const icons = parseIconsArray(deck);
@@ -3926,7 +3929,7 @@ function App() {
                               </div>
                             );
                           })}
-                        {decks.filter(deck => deck.name.toLowerCase().includes(editDeckSearch.toLowerCase())).length === 0 && (
+                        {decks.filter(deck => includesIgnoreCase(deck.name, editDeckSearch)).length === 0 && (
                           <div className="deck-search-item" style={{ color: '#999' }}>No decks found</div>
                         )}
                       </div>
@@ -4097,7 +4100,7 @@ function App() {
                                     style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000 }}
                                   >
                                     {decks
-                                      .filter(deck => deck.name.toLowerCase().includes((editResourceChapterDeckSearch[index] || '').toLowerCase()))
+                                      .filter(deck => includesIgnoreCase(deck.name, editResourceChapterDeckSearch[index] || ''))
                                       .slice(0, 10)
                                       .map(deck => (
                                         <div
@@ -4257,12 +4260,7 @@ function App() {
             />
             {showSearchDropdown && searchQuery && (
               <div className="main-search-dropdown deck-search-dropdown">
-                {decks
-                  .filter(deck =>
-                    deck.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    deck.archetype?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    deck.description?.toLowerCase().includes(searchQuery.toLowerCase())
-                  )
+                {filterByMultipleFields(decks, searchQuery, ['name', 'archetype', 'description'])
                   .slice(0, 10)
                   .map(deck => {
                     const icons = parseIconsArray(deck);
@@ -4294,11 +4292,7 @@ function App() {
                       </div>
                     );
                   })}
-                {decks.filter(deck =>
-                  deck.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  deck.archetype?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  deck.description?.toLowerCase().includes(searchQuery.toLowerCase())
-                ).length === 0 && (
+                {filterByMultipleFields(decks, searchQuery, ['name', 'archetype', 'description']).length === 0 && (
                   <div style={{ padding: '1rem', textAlign: 'center', color: '#666' }}>
                     No decks found
                   </div>
